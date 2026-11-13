@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Informasi Pemilihan & Monitoring Tempat PKL SMK</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --navy-primary: #0f2942;
+            --navy-dark: #091a2c;
+            --navy-light: #1e4268;
+            --accent-blue: #2563eb;
+            --bg-light: #f4f7fb;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-light);
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        /* Halaman Login */
+        #login-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-primary) 60%, var(--navy-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+            max-width: 440px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .login-header {
+            background-color: var(--navy-primary);
+            color: #ffffff;
+            padding: 30px 25px;
+            text-align: center;
+        }
+
+        .btn-navy {
+            background-color: var(--navy-primary);
+            color: #ffffff;
+            border: none;
+            transition: all 0.25s ease;
+        }
+
+        .btn-navy:hover {
+            background-color: var(--navy-light);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        /* Layout Dashboard */
+        #app-wrapper {
+            display: none;
+            min-height: 100vh;
+        }
+
+        #sidebar {
+            width: 260px;
+            background-color: var(--navy-primary);
+            color: #ffffff;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            position: fixed;
+            z-index: 1030;
+        }
+
+        #sidebar.collapsed {
+            margin-left: -260px;
+        }
+
+        .sidebar-brand {
+            padding: 20px;
+            background-color: var(--navy-dark);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-link-custom {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            border-left: 4px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .nav-link-custom:hover, .nav-link-custom.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border-left-color: #60a5fa;
+        }
+
+        #main-content {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            transition: all 0.3s ease;
+        }
+
+        #main-content.expanded {
+            margin-left: 0;
+            width: 100%;
+        }
+
+        .top-navbar {
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(15, 41, 66, 0.06);
+            padding: 14px 24px;
+        }
+
+        /* Kartu Statistik & Hover Effect */
+        .stat-card {
+            background: #ffffff;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 41, 66, 0.05);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            border-left: 4px solid var(--navy-primary);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 20px rgba(15, 41, 66, 0.12);
+        }
+
+        .icon-box {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            background-color: rgba(15, 41, 66, 0.08);
+            color: var(--navy-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
+
+        .table-card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(15, 41, 66, 0.05);
+            border: none;
+        }
+
+        .table thead th {
+            background-color: var(--navy-primary);
+            color: #ffffff;
+            font-weight: 500;
+            border: none;
+        }
+
+        .star-rating i {
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: #cbd5e1;
+            transition: color 0.2s;
+        }
+
+        .star-rating i.active {
+            color: #f59e0b;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                margin-left: -260px;
+            }
+            #sidebar.mobile-open {
+                margin-left: 0;
+            }
+            #main-content {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =====================================================================
+         HALAMAN 1: LOGIN (3 ROLE: SISWA, GURU PEMBIMBING/ADMIN, ALUMNI)
+    ====================================================================== -->
+    <div id="login-page">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-mortarboard-fill fs-1 mb-2 d-block"></i>
+                <h5 class="fw-bold mb-1">SISTEM INFORMASI PKL SMK</h5>
+                <small class="text-white-50">Pemilihan & Monitoring Tempat Praktik Kerja Lapangan</small>
+            </div>
+            <div class="p-4">
+                <div id="login-alert" class="alert alert-danger py-2 d-none small"></div>
+                <form id="form-login">
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Pilih Peran (Role)</label>
+                        <select id="login-role" class="form-select">
+                            <option value="siswa">Siswa</option>
+                            <option value="admin">Guru Pembimbing / Admin</option>
+                            <option value="alumni">Alumni</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Username atau Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                            <input type="text" id="login-username" class="form-control" placeholder="Masukkan username/email" value="andi" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
+                            <input type="password" id="login-password" class="form-control" placeholder="Masukkan password" value="123456" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-navy w-100 py-2 fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Masuk ke Sistem
+                    </button>
+                </form>
+
+                <hr class="my-3">
+                <p class="small text-muted text-center mb-2">Akses Cepat Demo (Prototype GitHub Pages):</p>
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm quick-login" data-role="siswa" data-user="Andi Pratama (XI RPL 1)">
+                        <i class="bi bi-person-badge me-1"></i> Masuk sebagai Siswa
+                    </button>
+                    <button type="button" class="btn btn-outline-dark btn-sm quick-login" data-role="admin" data-user="Budi Santoso, S.Kom. (Guru/Admin)">
+                        <i class="bi bi-shield-lock me-1"></i> Masuk sebagai Guru Pembimbing / Admin
+                    </button>
+                    <button type="button" class="btn btn-outline-success btn-sm quick-login" data-role="alumni" data-user="Dika Saputra (Alumni 2025)">
+                        <i class="bi bi-award me-1"></i> Masuk sebagai Alumni
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================================
+         HALAMAN UTAMA DASHBOARD (SETELAH LOGIN)
+    ====================================================================== -->
+    <div id="app-wrapper">
+        <!-- Sidebar Navigasi -->
+        <aside id="sidebar">
+            <div class="sidebar-brand d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-building-check fs-4 text-info"></i>
+                    <div>
+                        <div class="fw-bold small">SIM-PKL SMK</div>
+                        <span class="badge bg-info text-dark" id="badge-role" style="font-size: 0.65rem;">SISWA</span>
+                    </div>
+                </div>
+                <button class="btn btn-sm text-white d-md-none" id="close-sidebar"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <nav class="mt-3" id="sidebar-menu">
+                <!-- Menu dimuat dinamis oleh jQuery sesuai role -->
+            </nav>
+        </aside>
+
+        <!-- Konten Utama -->
+        <div id="main-content">
+            <!-- Navbar Atas -->
+            <header class="top-navbar d-flex justify-content-between align-items-center sticky-top">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-light border" id="toggle-sidebar">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <h6 class="mb-0 fw-bold text-dark d-none sm-block" id="page-title">Dashboard</h6>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Notifikasi -->
+                    <div class="dropdown">
+                        <button class="btn btn-light position-relative" data-bs-toggle="dropdown">
+                            <i class="bi bi-bell"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notif-count">2</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2" style="width: 280px;" id="notif-list">
+                            <li class="dropdown-header fw-bold">Notifikasi Terbaru</li>
+                            <li><a class="dropdown-item small text-wrap py-2 border-bottom" href="#">Pengajuan PKL di PT. Maju Jaya Abadi telah <b>Diterima</b>.</a></li>
+                            <li><a class="dropdown-item small text-wrap py-2" href="#">Jadwal monitoring minggu ke-2 telah tersedia.</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Profil & Logout -->
+                    <div class="dropdown">
+                        <button class="btn btn-light d-flex align-items-center gap-2 border" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle text-primary fs-5"></i>
+                            <span class="small fw-semibold d-none d-md-inline" id="nav-username">Andi Pratama</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><a class="dropdown-item small menu-item" data-page="profil"><i class="bi bi-person me-2"></i>Profil Saya</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item small text-danger" id="btn-logout" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Area Konten Dinamis -->
+            <main class="p-4" id="content-area">
+                <!-- Konten halaman dirender di sini -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Detail Tempat PKL -->
+    <div class="modal fade" id="modalDetailTempat" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0">
+                <div class="modal-header text-white" style="background-color: var(--navy-primary);">
+                    <h5 class="modal-title" id="detail-nama">Detail Tempat PKL</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detail-body"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Tambah/Edit Tempat PKL (Admin) -->
+    <div class="modal fade" id="modalFormTempat" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0">
+                <div class="modal-header text-white" style="background-color: var(--navy-primary);">
+                    <h5 class="modal-title" id="modalTempatTitle">Tambah Tempat PKL</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="form-tempat-pkl">
+                    <div class="modal-body">
+                        <input type="hidden" id="edit-tempat-id">
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Nama Perusahaan / Instansi</label>
+                            <input type="text" id="input-nama-perusahaan" class="form-control" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label small fw-semibold">Lokasi / Kota</label>
+                                <input type="text" id="input-lokasi" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label small fw-semibold">Kuota Siswa</label>
+                                <input type="number" id="input-kuota" class="form-control" value="5" required>
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Jurusan Relevan</label>
+                            <select id="input-jurusan" class="form-select">
+                                <option value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</option>
+                                <option value="Teknik Komputer dan Jaringan">Teknik Komputer dan Jaringan</option>
+                                <option value="Multimedia">Multimedia</option>
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Bidang Kegiatan</label>
+                            <input type="text" id="input-bidang" class="form-control" required>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Persyaratan</label>
+                            <textarea id="input-syarat" class="form-control" rows="2" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-navy">Simpan Data</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery & Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // =====================================================================
+        // DATA SIMULASI (SESUAI SEEDER DATABASE db_pkl PADA SRS)
+        // =====================================================================
+        let currentUser = { role: 'siswa', name: 'Andi Pratama (XI RPL 1)' };
+
+        let dataTempatPKL = [
+            {
+                id: 1,
+                nama: 'PT. Maju Jaya Abadi',
+                lokasi: 'Kota Metro',
+                alamat: 'Jl. Merdeka No. 10, Kec. Metro Pusat, Kota Metro',
+                bidang: 'Teknologi Informasi & Pengembangan Software',
+                jurusan: 'Rekayasa Perangkat Lunak',
+                persyaratan: 'Menguasai dasar HTML, CSS, PHP, disiplin, dan membawa laptop pribadi.',
+                kuota: 10,
+                rating: 4.8
+            },
+            {
+                id: 2,
+                nama: 'CV. Teknologi Mandiri',
+                lokasi: 'Kota Metro',
+                alamat: 'Jl. Ahmad Yani No. 45, Yosodadi, Kota Metro',
+                bidang: 'Jaringan Komputer & Infrastruktur IT',
+                jurusan: 'Teknik Komputer dan Jaringan',
+                persyaratan: 'Memahami konfigurasi Mikrotik, crimping kabel LAN, dan troubleshooting.',
+                kuota: 6,
+                rating: 4.5
+            },
+            {
+                id: 3,
+                nama: 'Dinas Komunikasi dan Informatika',
+                lokasi: 'Bandar Lampung',
+                alamat: 'Jl. WR Supratman No. 88, Teluk Betung, Bandar Lampung',
+                bidang: 'Layanan Informasi Publik & Sistem Pemerintahan',
+                jurusan: 'Multimedia',
+                persyaratan: 'Surat pengantar resmi sekolah, nilai rata-rata minimal 80.',
+                kuota: 8,
+                rating: 4.7
+            }
+        ];
+
+        let dataPengajuan = [
+            { id: 101, siswa: 'Andi Pratama', tempat: 'PT. Maju Jaya Abadi', tanggal: '2026-10-01', status: 'Diterima' },
+            { id: 102, siswa: 'Citra Lestari', tempat: 'CV. Teknologi Mandiri', tanggal: '2026-11-10', status: 'Menunggu' }
+        ];
+
+        let dataMonitoring = [
+            { id: 1, siswa: 'Andi Pratama', tanggal: '2026-11-05', kegiatan: 'Setup Environment & Pengenalan Database', perkembangan: 'Instalasi XAMPP dan memahami struktur ERD proyek.', catatan: 'Pertahankan semangat belajar.' },
+            { id: 2, siswa: 'Andi Pratama', tanggal: '2026-11-12', kegiatan: 'Membuat Modul CRUD Data Pelanggan', perkembangan: 'Selesai membuat form input dan tabel tampil data.', catatan: 'Progress sesuai target.' }
+        ];
+
+        let dataPenilaian = [
+            { id: 1, siswa: 'Andi Pratama', disiplin: 90, keterampilan: 88, sikap: 92, akhir: 90, catatan: 'Aktif melaporkan monitoring dan kemampuan coding sangat baik.' }
+        ];
+
+        let dataPengalaman = [
+            {
+                id: 1,
+                alumni: 'Dika Saputra',
+                tempat: 'PT. Maju Jaya Abadi',
+                judul: 'Pengalaman Seru Belajar Web Development',
+                kegiatan: 'Membuat fitur sistem informasi klien dan mengikuti rapat evaluasi mingguan.',
+                kendala: 'Awalnya kesulitan memahami query SQL join antar tabel.',
+                solusi: 'Bertanya kepada mentor lapangan dan latihan mandiri di rumah.',
+                tips: 'Jangan malu bertanya dan selalu datang 15 menit lebih awal.'
+            }
+        ];
+
+        let dataUlasan = [
+            { id: 1, alumni: 'Dika Saputra', id_tempat: 1, tempat: 'PT. Maju Jaya Abadi', rating: 5, komentar: 'Mentor sangat ramah dan membimbing dari nol. Lingkungan kerja nyaman.', tanggal: '2026-09-15' }
+        ];
+
+        // =====================================================================
+        // KONFIGURASI MENU PER ROLE
+        // =====================================================================
+        const menusByRole = {
+            siswa: [
+                { id: 'dashboard-siswa', icon: 'bi-speedometer2', label: 'Dashboard Siswa' },
+                { id: 'daftar-tempat', icon: 'bi-building', label: 'Daftar Tempat PKL' },
+                { id: 'form-pengajuan', icon: 'bi-send-plus', label: 'Ajukan Tempat PKL' },
+                { id: 'status-pengajuan', icon: 'bi-clipboard-check', label: 'Status Pengajuan' },
+                { id: 'monitoring-siswa', icon: 'bi-journal-text', label: 'Monitoring PKL' },
+                { id: 'hasil-penilaian', icon: 'bi-award', label: 'Hasil Penilaian' },
+                { id: 'profil', icon: 'bi-person-gear', label: 'Profil Pengguna' }
+            ],
+            admin: [
+                { id: 'dashboard-admin', icon: 'bi-speedometer2', label: 'Dashboard Guru/Admin' },
+                { id: 'kelola-tempat', icon: 'bi-buildings', label: 'Manajemen Tempat PKL' },
+                { id: 'kelola-pengajuan', icon: 'bi-inboxes', label: 'Manajemen Pengajuan' },
+                { id: 'monitoring-admin', icon: 'bi-eye', label: 'Monitoring & Penilaian' },
+                { id: 'profil', icon: 'bi-person-gear', label: 'Profil Pengguna' }
+            ],
+            alumni: [
+                { id: 'dashboard-alumni', icon: 'bi-speedometer2', label: 'Dashboard Alumni' },
+                { id: 'daftar-tempat', icon: 'bi-building', label: 'Daftar Tempat PKL' },
+                { id: 'form-pengalaman', icon: 'bi-lightbulb', label: 'Berbagi Pengalaman PKL' },
+                { id: 'ulasan-rating', icon: 'bi-star-half', label: 'Ulasan & Rating' },
+                { id: 'profil', icon: 'bi-person-gear', label: 'Profil Pengguna' }
+            ]
+        };
+
+        // =====================================================================
+        // AUTENTIKASI & NAVIGASI
+        // =====================================================================
+        function masukSistem(role, nama) {
+            currentUser = { role: role, name: nama };
+            $('#badge-role').text(role.toUpperCase());
+            $('#nav-username').text(nama);
+
+            // Render Sidebar Menu
+            let menuHtml = '';
+            menusByRole[role].forEach((m, index) => {
+                menuHtml += `
+                    <a class="nav-link-custom menu-item ${index === 0 ? 'active' : ''}" data-page="${m.id}">
+                        <i class="bi ${m.icon}"></i>
+                        <span>${m.label}</span>
+                    </a>
+                `;
+            });
+            $('#sidebar-menu').html(menuHtml);
+
+            $('#login-page').fadeOut(200, function() {
+                $('#app-wrapper').fadeIn(250);
+                loadPage(menusByRole[role][0].id);
+            });
+        }
+
+        $('#form-login').on('submit', function(e) {
+            e.preventDefault();
+            const role = $('#login-role').val();
+            const user = $('#login-username').val().trim();
+            const pass = $('#login-password').val().trim();
+
+            if (!user || !pass) {
+                $('#login-alert').removeClass('d-none').text('Username dan password wajib diisi!');
+                return;
+            }
+            const defaultNames = {
+                siswa: 'Andi Pratama (XI RPL 1)',
+                admin: 'Budi Santoso, S.Kom.',
+                alumni: 'Dika Saputra (Alumni 2025)'
+            };
+            masukSistem(role, defaultNames[role]);
+        });
+
+        $('.quick-login').on('click', function() {
+            masukSistem($(this).data('role'), $(this).data('user'));
+        });
+
+        $('#btn-logout').on('click', function(e) {
+            e.preventDefault();
+            $('#app-wrapper').fadeOut(200, function() {
+                $('#login-page').fadeIn(250);
+            });
+        });
+
+        // Toggle Sidebar Responsif
+        $('#toggle-sidebar').on('click', function() {
+            if ($(window).width() <= 768) {
+                $('#sidebar').toggleClass('mobile-open');
+            } else {
+                $('#sidebar').toggleClass('collapsed');
+                $('#main-content').toggleClass('expanded');
+            }
+        });
+
+        $('#close-sidebar').on('click', function() {
+            $('#sidebar').removeClass('mobile-open');
+        });
+
+        $(document).on('click', '.menu-item', function() {
+            $('.menu-item').removeClass('active');
+            $(this).addClass('active');
+            $('#sidebar').removeClass('mobile-open');
+            loadPage($(this).data('page'));
+        });
+
+        // =====================================================================
+        // RENDER HALAMAN DINAMIS
+        // =====================================================================
+        function showNotifToast(msg, type = 'success') {
+            const alertHtml = `
+                <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>${msg}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            $('#content-area').prepend(alertHtml);
+        }
+
+        function loadPage(page) {
+            let html = '';
+
+            // 1. DASHBOARD SISWA
+            if (page === 'dashboard-siswa') {
+                $('#page-title').text('Dashboard Siswa');
+                html = `
+                    <div class="alert text-white border-0 shadow-sm mb-4" style="background: linear-gradient(90deg, var(--navy-primary), var(--navy-light));">
+                        <h5 class="fw-bold mb-1">Selamat Datang, ${currentUser.name}!</h5>
+                        <p class="mb-0 small opacity-75">Pantau pengajuan tempat PKL, isi jurnal monitoring harian, dan lihat hasil penilaian Anda di sini.</p>
+                    </div>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3 col-6">
+                            <div class="card stat-card p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-muted small">Tempat PKL</div>
+                                        <h4 class="fw-bold mb-0">${dataTempatPKL.length}</h4>
+                                    </div>
+                                    <div class="icon-box"><i class="bi bi-building"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card stat-card p-3" style="border-left-color: #16a34a;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-muted small">Status PKL</div>
+                                        <h6 class="fw-bold text-success mb-0">Diterima</h6>
+                                    </div>
+                                    <div class="icon-box text-success"><i class="bi bi-check-circle"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card stat-card p-3" style="border-left-color: #2563eb;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-muted small">Laporan Monitoring</div>
+                                        <h4 class="fw-bold mb-0">${dataMonitoring.length}</h4>
+                                    </div>
+                                    <div class="icon-box text-primary"><i class="bi bi-journal-check"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 col-6">
+                            <div class="card stat-card p-3" style="border-left-color: #f59e0b;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="text-muted small">Nilai Akhir</div>
+                                        <h4 class="fw-bold mb-0">${dataPenilaian[0].akhir}</h4>
+                                    </div>
+                                    <div class="icon-box text-warning"><i class="bi bi-award"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card table-card p-4">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-stars text-warning me-2"></i>Pengalaman & Tips Terbaru dari Alumni</h6>
+                        ${dataPengalaman.map(p => `
+                            <div class="p-3 bg-light rounded border-start border-4 border-primary mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong class="text-primary">${p.judul}</strong>
+                                    <span class="badge bg-secondary">${p.tempat}</span>
+                                </div>
+                                <small class="text-muted d-block mb-2">Oleh: ${p.alumni}</small>
+                                <p class="small mb-1"><b>Kegiatan:</b> ${p.kegiatan}</p>
+                                <p class="small mb-0 text-success"><b>Tips Alumni:</b> "${p.tips}"</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // 2. DAFTAR & FILTER TEMPAT PKL
+            else if (page === 'daftar-tempat') {
+                $('#page-title').text('Daftar Tempat PKL');
+                html = `
+                    <div class="card table-card p-4">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-5">
+                                <input type="text" id="cari-tempat" class="form-control" placeholder="Cari nama perusahaan atau lokasi...">
+                            </div>
+                            <div class="col-md-4">
+                                <select id="filter-jurusan" class="form-select">
+                                    <option value="">Semua Jurusan</option>
+                                    <option value="Rekayasa Perangkat Lunak">Rekayasa Perangkat Lunak</option>
+                                    <option value="Teknik Komputer dan Jaringan">Teknik Komputer dan Jaringan</option>
+                                    <option value="Multimedia">Multimedia</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button class="btn btn-navy w-100" id="btn-reset-filter"><i class="bi bi-arrow-clockwise me-1"></i>Reset Filter</button>
+                            </div>
+                        </div>
+                        <div class="row g-3" id="list-tempat-container"></div>
+                    </div>
+                `;
+                $('#content-area').html(html);
+                renderKartuTempat();
+                return;
+            }
+
+            // 3. FORM PENGAJUAN PKL
+            else if (page === 'form-pengajuan') {
+                $('#page-title').text('Form Pengajuan Tempat PKL');
+                html = `
+                    <div class="card table-card p-4" style="max-width: 650px;">
+                        <h6 class="fw-bold mb-3">Ajukan Penempatan PKL</h6>
+                        <form id="submit-pengajuan">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Pilih Tempat PKL</label>
+                                <select id="pilih-tempat-ajukan" class="form-select" required>
+                                    ${dataTempatPKL.map(t => `<option value="${t.nama}">${t.nama} - ${t.lokasi} (Kuota: ${t.kuota})</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">Tanggal Mulai</label>
+                                    <input type="date" class="form-control" value="2026-12-01" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">Tanggal Selesai</label>
+                                    <input type="date" class="form-control" value="2027-02-28" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Alasan Memilih Tempat PKL</label>
+                                <textarea class="form-control" rows="3" placeholder="Jelaskan kesesuaian kompetensi Anda dengan perusahaan ini..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-navy"><i class="bi bi-send me-1"></i>Kirim Pengajuan</button>
+                        </form>
+                    </div>
+                `;
+            }
+
+            // 4. STATUS PENGAJUAN
+            else if (page === 'status-pengajuan') {
+                $('#page-title').text('Status Pengajuan PKL');
+                html = `
+                    <div class="card table-card p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Tempat PKL</th>
+                                        <th>Tanggal Ajukan</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dataPengajuan.map((p, i) => {
+                                        let badge = p.status === 'Diterima' ? 'bg-success' : (p.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark');
+                                        return `
+                                            <tr>
+                                                <td>${i + 1}</td>
+                                                <td class="fw-semibold">${p.tempat}</td>
+                                                <td>${p.tanggal}</td>
+                                                <td><span class="badge ${badge}">${p.status}</span></td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 5. MONITORING SISWA (CRUD)
+            else if (page === 'monitoring-siswa') {
+                $('#page-title').text('Monitoring Kegiatan PKL');
+                html = `
+                    <div class="card table-card p-4 mb-4">
+                        <h6 class="fw-bold mb-3">Tambah Laporan Kegiatan Harian / Mingguan</h6>
+                        <form id="form-tambah-monitoring" class="row g-2">
+                            <div class="col-md-3">
+                                <input type="date" id="mon-tgl" class="form-control" value="2026-11-13" required>
+                            </div>
+                            <div class="col-md-4">
+                                <input type="text" id="mon-kegiatan" class="form-control" placeholder="Judul kegiatan..." required>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" id="mon-perkembangan" class="form-control" placeholder="Hasil/perkembangan..." required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-navy w-100"><i class="bi bi-plus-lg"></i> Simpan</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card table-card p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>Kegiatan</th>
+                                        <th>Perkembangan</th>
+                                        <th>Catatan Guru</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dataMonitoring.map(m => `
+                                        <tr>
+                                            <td>${m.tanggal}</td>
+                                            <td class="fw-semibold">${m.kegiatan}</td>
+                                            <td>${m.perkembangan}</td>
+                                            <td><span class="text-muted small">${m.catatan || '-'}</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-danger hapus-monitoring" data-id="${m.id}"><i class="bi bi-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 6. HASIL PENILAIAN SISWA
+            else if (page === 'hasil-penilaian') {
+                $('#page-title').text('Hasil Penilaian PKL');
+                const n = dataPenilaian[0];
+                html = `
+                    <div class="card table-card p-4" style="max-width: 700px;">
+                        <h6 class="fw-bold mb-3">Transkrip Nilai Praktik Kerja Lapangan</h6>
+                        <table class="table table-bordered">
+                            <tr><th class="bg-light w-50">Nama Siswa</th><td>${n.siswa}</td></tr>
+                            <tr><th class="bg-light">Nilai Kedisiplinan</th><td>${n.disiplin}</td></tr>
+                            <tr><th class="bg-light">Nilai Keterampilan Teknis</th><td>${n.keterampilan}</td></tr>
+                            <tr><th class="bg-light">Nilai Sikap & Etika</th><td>${n.sikap}</td></tr>
+                            <tr><th class="bg-light">Nilai Akhir (Rata-rata)</th><td class="fw-bold text-primary fs-5">${n.akhir} (A)</td></tr>
+                            <tr><th class="bg-light">Catatan Guru Pembimbing</th><td>${n.catatan}</td></tr>
+                        </table>
+                    </div>
+                `;
+            }
+
+            // 7. DASHBOARD ADMIN / GURU PEMBIMBING
+            else if (page === 'dashboard-admin') {
+                $('#page-title').text('Dashboard Guru Pembimbing / Admin');
+                html = `
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <div class="card stat-card p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><div class="text-muted small">Total Tempat PKL</div><h4 class="fw-bold mb-0">${dataTempatPKL.length}</h4></div>
+                                    <div class="icon-box"><i class="bi bi-buildings"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card p-3" style="border-left-color: #f59e0b;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><div class="text-muted small">Pengajuan Menunggu</div><h4 class="fw-bold mb-0">${dataPengajuan.filter(p => p.status === 'Menunggu').length}</h4></div>
+                                    <div class="icon-box text-warning"><i class="bi bi-hourglass-split"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card stat-card p-3" style="border-left-color: #16a34a;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><div class="text-muted small">Log Monitoring Masuk</div><h4 class="fw-bold mb-0">${dataMonitoring.length}</h4></div>
+                                    <div class="icon-box text-success"><i class="bi bi-journal-check"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card table-card p-4">
+                        <h6 class="fw-bold mb-3">Ringkasan Pengajuan Siswa Terbaru</h6>
+                        <div class="table-responsive">
+                            <table class="table align-middle">
+                                <thead><tr><th>Siswa</th><th>Tempat PKL</th><th>Tanggal</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    ${dataPengajuan.map(p => `
+                                        <tr>
+                                            <td>${p.siswa}</td>
+                                            <td>${p.tempat}</td>
+                                            <td>${p.tanggal}</td>
+                                            <td><span class="badge ${p.status === 'Diterima' ? 'bg-success' : (p.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark')}">${p.status}</span></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 8. MANAJEMEN TEMPAT PKL (CRUD ADMIN)
+            else if (page === 'kelola-tempat') {
+                $('#page-title').text('Manajemen Data Tempat PKL');
+                html = `
+                    <div class="card table-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Daftar Mitra Industri / Tempat PKL</h6>
+                            <button class="btn btn-navy btn-sm" id="btn-tambah-tempat"><i class="bi bi-plus-circle me-1"></i>Tambah Tempat PKL</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Nama Perusahaan</th>
+                                        <th>Lokasi</th>
+                                        <th>Jurusan</th>
+                                        <th>Kuota</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dataTempatPKL.map((t, i) => `
+                                        <tr>
+                                            <td>${i + 1}</td>
+                                            <td class="fw-semibold">${t.nama}</td>
+                                            <td>${t.lokasi}</td>
+                                            <td><span class="badge bg-light text-dark border">${t.jurusan}</span></td>
+                                            <td>${t.kuota} Siswa</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning edit-tempat" data-id="${t.id}"><i class="bi bi-pencil"></i></button>
+                                                <button class="btn btn-sm btn-danger hapus-tempat" data-id="${t.id}"><i class="bi bi-trash"></i></button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 9. MANAJEMEN PENGAJUAN SISWA (ADMIN)
+            else if (page === 'kelola-pengajuan') {
+                $('#page-title').text('Verifikasi Pengajuan Tempat PKL');
+                html = `
+                    <div class="card table-card p-4">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Siswa</th>
+                                        <th>Tempat Tujuan</th>
+                                        <th>Tanggal Ajukan</th>
+                                        <th>Status</th>
+                                        <th>Keputusan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dataPengajuan.map(p => `
+                                        <tr>
+                                            <td class="fw-semibold">${p.siswa}</td>
+                                            <td>${p.tempat}</td>
+                                            <td>${p.tanggal}</td>
+                                            <td><span class="badge ${p.status === 'Diterima' ? 'bg-success' : (p.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark')}">${p.status}</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success ubah-status" data-id="${p.id}" data-status="Diterima"><i class="bi bi-check-lg"></i> Terima</button>
+                                                <button class="btn btn-sm btn-danger ubah-status" data-id="${p.id}" data-status="Ditolak"><i class="bi bi-x-lg"></i> Tolak</button>
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 10. MONITORING & PENILAIAN (ADMIN)
+            else if (page === 'monitoring-admin') {
+                $('#page-title').text('Monitoring & Penilaian PKL Siswa');
+                html = `
+                    <div class="card table-card p-4 mb-4">
+                        <h6 class="fw-bold mb-3">Laporan Monitoring Kegiatan Siswa</h6>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <thead><tr><th>Siswa</th><th>Tanggal</th><th>Kegiatan</th><th>Perkembangan</th></tr></thead>
+                                <tbody>
+                                    ${dataMonitoring.map(m => `
+                                        <tr>
+                                            <td class="fw-semibold">${m.siswa}</td>
+                                            <td>${m.tanggal}</td>
+                                            <td>${m.kegiatan}</td>
+                                            <td>${m.perkembangan}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card table-card p-4" style="max-width: 650px;">
+                        <h6 class="fw-bold mb-3">Input Penilaian Akhir PKL</h6>
+                        <form id="form-input-nilai">
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Nama Siswa</label>
+                                <input type="text" class="form-control" value="Andi Pratama" readonly>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label small fw-semibold">Disiplin</label>
+                                    <input type="number" id="n-disiplin" class="form-control" value="${dataPenilaian[0].disiplin}" min="0" max="100" required>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label small fw-semibold">Keterampilan</label>
+                                    <input type="number" id="n-keterampilan" class="form-control" value="${dataPenilaian[0].keterampilan}" min="0" max="100" required>
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label class="form-label small fw-semibold">Sikap</label>
+                                    <input type="number" id="n-sikap" class="form-control" value="${dataPenilaian[0].sikap}" min="0" max="100" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Catatan Evaluasi</label>
+                                <textarea id="n-catatan" class="form-control" rows="2">${dataPenilaian[0].catatan}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-navy"><i class="bi bi-save me-1"></i>Simpan Penilaian</button>
+                        </form>
+                    </div>
+                `;
+            }
+
+            // 11. DASHBOARD ALUMNI
+            else if (page === 'dashboard-alumni') {
+                $('#page-title').text('Dashboard Alumni');
+                html = `
+                    <div class="alert text-white border-0 shadow-sm mb-4" style="background: linear-gradient(90deg, var(--navy-primary), var(--navy-light));">
+                        <h5 class="fw-bold mb-1">Halo, ${currentUser.name}!</h5>
+                        <p class="mb-0 small opacity-75">Bagikan pengalaman PKL serta berikan ulasan dan rating tempat PKL untuk membantu adik kelas.</p>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="card stat-card p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><div class="text-muted small">Pengalaman Dibagikan</div><h4 class="fw-bold mb-0">${dataPengalaman.length}</h4></div>
+                                    <div class="icon-box"><i class="bi bi-lightbulb"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card stat-card p-3" style="border-left-color: #f59e0b;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div><div class="text-muted small">Ulasan & Rating Diberikan</div><h4 class="fw-bold mb-0">${dataUlasan.length}</h4></div>
+                                    <div class="icon-box text-warning"><i class="bi bi-star-fill"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 12. FORM PENGALAMAN PKL (ALUMNI)
+            else if (page === 'form-pengalaman') {
+                $('#page-title').text('Berbagi Pengalaman PKL');
+                html = `
+                    <div class="card table-card p-4 mb-4" style="max-width: 750px;">
+                        <h6 class="fw-bold mb-3">Tulis Pengalaman PKL Anda</h6>
+                        <form id="submit-pengalaman">
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-semibold">Tempat PKL</label>
+                                    <select id="exp-tempat" class="form-select">
+                                        ${dataTempatPKL.map(t => `<option value="${t.nama}">${t.nama}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-semibold">Judul Pengalaman</label>
+                                    <input type="text" id="exp-judul" class="form-control" placeholder="Contoh: Pengalaman Coding Web di..." required>
+                                </div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small fw-semibold">Kegiatan Utama Selama PKL</label>
+                                <textarea id="exp-kegiatan" class="form-control" rows="2" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-semibold">Kendala yang Dihadapi</label>
+                                    <input type="text" id="exp-kendala" class="form-control" required>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label class="form-label small fw-semibold">Solusi</label>
+                                    <input type="text" id="exp-solusi" class="form-control" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Tips untuk Siswa</label>
+                                <input type="text" id="exp-tips" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-navy"><i class="bi bi-share me-1"></i>Bagikan Pengalaman</button>
+                        </form>
+                    </div>
+                `;
+            }
+
+            // 13. ULASAN & RATING (ALUMNI)
+            else if (page === 'ulasan-rating') {
+                $('#page-title').text('Ulasan & Rating Tempat PKL');
+                html = `
+                    <div class="card table-card p-4 mb-4" style="max-width: 650px;">
+                        <h6 class="fw-bold mb-3">Beri Ulasan & Rating Tempat PKL</h6>
+                        <form id="submit-ulasan">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Pilih Tempat PKL</label>
+                                <select id="ulasan-tempat" class="form-select">
+                                    ${dataTempatPKL.map(t => `<option value="${t.id}">${t.nama}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold d-block">Rating Bintang</label>
+                                <div class="star-rating" id="star-input">
+                                    <i class="bi bi-star-fill active" data-val="1"></i>
+                                    <i class="bi bi-star-fill active" data-val="2"></i>
+                                    <i class="bi bi-star-fill active" data-val="3"></i>
+                                    <i class="bi bi-star-fill active" data-val="4"></i>
+                                    <i class="bi bi-star-fill active" data-val="5"></i>
+                                </div>
+                                <input type="hidden" id="ulasan-rating-val" value="5">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Komentar Ulasan</label>
+                                <textarea id="ulasan-komentar" class="form-control" rows="3" placeholder="Ceritakan suasana kerja, bimbingan mentor, dan fasilitas..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-navy"><i class="bi bi-star me-1"></i>Kirim Ulasan</button>
+                        </form>
+                    </div>
+                    <div class="card table-card p-4">
+                        <h6 class="fw-bold mb-3">Daftar Ulasan Alumni</h6>
+                        ${dataUlasan.map(u => `
+                            <div class="border-bottom pb-2 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>${u.tempat}</strong>
+                                    <span class="text-warning">${'★'.repeat(u.rating)}</span>
+                                </div>
+                                <small class="text-muted">${u.alumni} • ${u.tanggal}</small>
+                                <p class="small mb-0 mt-1">${u.komentar}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // 14. PROFIL PENGGUNA
+            else if (page === 'profil') {
+                $('#page-title').text('Profil Pengguna');
+                html = `
+                    <div class="card table-card p-4" style="max-width: 550px;">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="icon-box fs-2" style="width: 64px; height: 64px;"><i class="bi bi-person-fill"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">${currentUser.name}</h5>
+                                <span class="badge bg-primary text-uppercase">${currentUser.role}</span>
+                            </div>
+                        </div>
+                        <form id="form-profil">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Nama Lengkap</label>
+                                <input type="text" class="form-control" value="${currentUser.name}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Password Baru (Opsional)</label>
+                                <input type="password" class="form-control" placeholder="Kosongkan jika tidak ingin mengubah">
+                            </div>
+                            <button type="submit" class="btn btn-navy">Perbarui Profil</button>
+                        </form>
+                    </div>
+                `;
+            }
+
+            $('#content-area').hide().html(html).fadeIn(200);
+        }
+
+        // =====================================================================
+        // INTERAKSI & EVENT HANDLER JQUERY
+        // =====================================================================
+        function renderKartuTempat() {
+            const keyword = ($('#cari-tempat').val() || '').toLowerCase();
+            const jurusan = $('#filter-jurusan').val() || '';
+
+            const filtered = dataTempatPKL.filter(t => {
+                const matchKey = t.nama.toLowerCase().includes(keyword) || t.lokasi.toLowerCase().includes(keyword);
+                const matchJur = !jurusan || t.jurusan === jurusan;
+                return matchKey && matchJur;
+            });
+
+            let cards = '';
+            filtered.forEach(t => {
+                cards += `
+                    <div class="col-md-4">
+                        <div class="card h-100 border shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary-subtle text-primary">${t.jurusan}</span>
+                                    <span class="text-warning fw-bold small"><i class="bi bi-star-fill"></i> ${t.rating}</span>
+                                </div>
+                                <h6 class="fw-bold">${t.nama}</h6>
+                                <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>${t.lokasi}</p>
+                                <p class="small mb-3">${t.bidang}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small fw-semibold text-success">Kuota: ${t.kuota}</span>
+                                    <button class="btn btn-sm btn-navy lihat-detail" data-id="${t.id}">Detail Tempat</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            $('#list-tempat-container').html(cards || '<div class="col-12 text-center text-muted py-4">Data tempat PKL tidak ditemukan.</div>');
+        }
+
+        $(document).on('keyup', '#cari-tempat', renderKartuTempat);
+        $(document).on('change', '#filter-jurusan', renderKartuTempat);
+        $(document).on('click', '#btn-reset-filter', function() {
+            $('#cari-tempat').val('');
+            $('#filter-jurusan').val('');
+            renderKartuTempat();
+        });
+
+        // Modal Detail Tempat PKL
+        $(document).on('click', '.lihat-detail', function() {
+            const id = $(this).data('id');
+            const t = dataTempatPKL.find(x => x.id === id);
+            const ulasanTempat = dataUlasan.filter(u => u.id_tempat === id);
+
+            $('#detail-nama').text(t.nama);
+            $('#detail-body').html(`
+                <p class="mb-1"><b>Lokasi:</b> ${t.alamat}</p>
+                <p class="mb-1"><b>Bidang Kegiatan:</b> ${t.bidang}</p>
+                <p class="mb-1"><b>Jurusan Relevan:</b> ${t.jurusan}</p>
+                <p class="mb-1"><b>Kuota Tersedia:</b> ${t.kuota} Siswa</p>
+                <p class="mb-3"><b>Persyaratan:</b> ${t.persyaratan}</p>
+                <hr>
+                <h6 class="fw-bold">Ulasan & Rating Alumni</h6>
+                ${ulasanTempat.length ? ulasanTempat.map(u => `
+                    <div class="bg-light p-2 rounded mb-2">
+                        <div class="d-flex justify-content-between small fw-bold">
+                            <span>${u.alumni}</span>
+                            <span class="text-warning">${'★'.repeat(u.rating)}</span>
+                        </div>
+                        <p class="small mb-0">${u.komentar}</p>
+                    </div>
+                `).join('') : '<p class="small text-muted">Belum ada ulasan untuk tempat ini.</p>'}
+            `);
+            new bootstrap.Modal('#modalDetailTempat').show();
+        });
+
+        // Submit Pengajuan Siswa
+        $(document).on('submit', '#submit-pengajuan', function(e) {
+            e.preventDefault();
+            dataPengajuan.push({
+                id: Date.now(),
+                siswa: currentUser.name,
+                tempat: $('#pilih-tempat-ajukan').val(),
+                tanggal: '2026-11-13',
+                status: 'Menunggu'
+            });
+            loadPage('status-pengajuan');
+            showNotifToast('Pengajuan tempat PKL berhasil dikirim dan menunggu verifikasi Guru Pembimbing.');
+        });
+
+        // CRUD Monitoring Siswa
+        $(document).on('submit', '#form-tambah-monitoring', function(e) {
+            e.preventDefault();
+            dataMonitoring.push({
+                id: Date.now(),
+                siswa: 'Andi Pratama',
+                tanggal: $('#mon-tgl').val(),
+                kegiatan: $('#mon-kegiatan').val(),
+                perkembangan: $('#mon-perkembangan').val(),
+                catatan: 'Menunggu tinjauan guru'
+            });
+            loadPage('monitoring-siswa');
+            showNotifToast('Laporan monitoring kegiatan PKL berhasil ditambahkan.');
+        });
+
+        $(document).on('click', '.hapus-monitoring', function() {
+            if (confirm('Yakin ingin menghapus catatan monitoring ini?')) {
+                const id = $(this).data('id');
+                dataMonitoring = dataMonitoring.filter(m => m.id !== id);
+                loadPage('monitoring-siswa');
+                showNotifToast('Data monitoring dihapus.', 'warning');
+            }
+        });
+
+        // CRUD Tempat PKL (Admin)
+        $(document).on('click', '#btn-tambah-tempat', function() {
+            $('#modalTempatTitle').text('Tambah Data Tempat PKL');
+            $('#edit-tempat-id').val('');
+            $('#form-tempat-pkl')[0].reset();
+            new bootstrap.Modal('#modalFormTempat').show();
+        });
+
+        $(document).on('click', '.edit-tempat', function() {
+            const t = dataTempatPKL.find(x => x.id === $(this).data('id'));
+            $('#modalTempatTitle').text('Edit Data Tempat PKL');
+            $('#edit-tempat-id').val(t.id);
+            $('#input-nama-perusahaan').val(t.nama);
+            $('#input-lokasi').val(t.lokasi);
+            $('#input-kuota').val(t.kuota);
+            $('#input-jurusan').val(t.jurusan);
+            $('#input-bidang').val(t.bidang);
+            $('#input-syarat').val(t.persyaratan);
+            new bootstrap.Modal('#modalFormTempat').show();
+        });
+
+        $('#form-tempat-pkl').on('submit', function(e) {
+            e.preventDefault();
+            const editId = $('#edit-tempat-id').val();
+            const obj = {
+                id: editId ? parseInt(editId) : Date.now(),
+                nama: $('#input-nama-perusahaan').val(),
+                lokasi: $('#input-lokasi').val(),
+                alamat: $('#input-lokasi').val(),
+                kuota: parseInt($('#input-kuota').val()),
+                jurusan: $('#input-jurusan').val(),
+                bidang: $('#input-bidang').val(),
+                persyaratan: $('#input-syarat').val(),
+                rating: 5.0
+            };
+
+            if (editId) {
+                const idx = dataTempatPKL.findIndex(x => x.id === parseInt(editId));
+                dataTempatPKL[idx] = obj;
+            } else {
+                dataTempatPKL.push(obj);
+            }
+            bootstrap.Modal.getInstance(document.getElementById('modalFormTempat')).hide();
+            loadPage('kelola-tempat');
+            showNotifToast('Data tempat PKL berhasil disimpan.');
+        });
+
+        $(document).on('click', '.hapus-tempat', function() {
+            if (confirm('Apakah Anda yakin ingin menghapus tempat PKL ini?')) {
+                const id = $(this).data('id');
+                dataTempatPKL = dataTempatPKL.filter(t => t.id !== id);
+                loadPage('kelola-tempat');
+                showNotifToast('Data tempat PKL berhasil dihapus.', 'danger');
+            }
+        });
+
+        // Verifikasi Pengajuan (Admin)
+        $(document).on('click', '.ubah-status', function() {
+            const id = $(this).data('id');
+            const status = $(this).data('status');
+            const idx = dataPengajuan.findIndex(p => p.id === id);
+            dataPengajuan[idx].status = status;
+            loadPage('kelola-pengajuan');
+            showNotifToast(`Status pengajuan diperbarui menjadi ${status}.`);
+        });
+
+        // Simpan Nilai (Admin)
+        $(document).on('submit', '#form-input-nilai', function(e) {
+            e.preventDefault();
+            const d = parseInt($('#n-disiplin').val());
+            const k = parseInt($('#n-keterampilan').val());
+            const s = parseInt($('#n-sikap').val());
+            dataPenilaian[0] = {
+                id: 1,
+                siswa: 'Andi Pratama',
+                disiplin: d,
+                keterampilan: k,
+                sikap: s,
+                akhir: ((d + k + s) / 3).toFixed(2),
+                catatan: $('#n-catatan').val()
+            };
+            showNotifToast('Nilai PKL siswa berhasil disimpan.');
+        });
+
+        // Pengalaman & Ulasan Alumni
+        $(document).on('submit', '#submit-pengalaman', function(e) {
+            e.preventDefault();
+            dataPengalaman.unshift({
+                id: Date.now(),
+                alumni: currentUser.name,
+                tempat: $('#exp-tempat').val(),
+                judul: $('#exp-judul').val(),
+                kegiatan: $('#exp-kegiatan').val(),
+                kendala: $('#exp-kendala').val(),
+                solusi: $('#exp-solusi').val(),
+                tips: $('#exp-tips').val()
+            });
+            loadPage('dashboard-alumni');
+            showNotifToast('Pengalaman PKL berhasil dibagikan kepada siswa.');
+        });
+
+        $(document).on('click', '#star-input i', function() {
+            const val = $(this).data('val');
+            $('#ulasan-rating-val').val(val);
+            $('#star-input i').each(function() {
+                $(this).toggleClass('active', $(this).data('val') <= val);
+            });
+        });
+
+        $(document).on('submit', '#submit-ulasan', function(e) {
+            e.preventDefault();
+            const idTempat = parseInt($('#ulasan-tempat').val());
+            const tempatObj = dataTempatPKL.find(t => t.id === idTempat);
+            dataUlasan.unshift({
+                id: Date.now(),
+                alumni: currentUser.name,
+                id_tempat: idTempat,
+                tempat: tempatObj.nama,
+                rating: parseInt($('#ulasan-rating-val').val()),
+                komentar: $('#ulasan-komentar').val(),
+                tanggal: '2026-11-13'
+            });
+            loadPage('ulasan-rating');
+            showNotifToast('Ulasan dan rating berhasil dikirim.');
+        });
+
+        $(document).on('submit', '#form-profil', function(e) {
+            e.preventDefault();
+            showNotifToast('Profil pengguna berhasil diperbarui.');
+        });
+    </script>
+</body>
+</html>
