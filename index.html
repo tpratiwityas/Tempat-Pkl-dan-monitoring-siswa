@@ -208,6 +208,50 @@
                 width: 100%;
             }
         }
+
+        /* RESPONSIVE LOGIN FULL SCREEN MOBILE */
+        @media (max-width: 576px) {
+
+            html, body {
+                width: 100%;
+                min-height: 100%;
+                margin: 0;
+                padding: 0;
+                background: #ffffff;
+            }
+
+            #login-page {
+                width: 100%;
+                min-height: 100vh;
+                min-height: 100svh;
+                padding: 0;
+                margin: 0;
+                background: #ffffff;
+                display: flex;
+                align-items: stretch;
+                justify-content: center;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: none;
+                min-height: 100vh;
+                min-height: 100svh;
+                border-radius: 0;
+                box-shadow: none;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .login-header {
+                padding: 30px 20px;
+            }
+
+            .login-card > .p-4 {
+                flex: 1;
+                padding: 24px 20px !important;
+            }
+        }
     </style>
 </head>
 <body>
