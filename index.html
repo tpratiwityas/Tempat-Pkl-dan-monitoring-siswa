@@ -1073,34 +1073,42 @@
                 return;
             }
 
-            // 3. FORM PENGAJUAN PKL
+           // 3. FORM PENGAJUAN PKL
             else if (page === 'form-pengajuan') {
                 $('#page-title').text('Form Pengajuan Tempat PKL');
+                const jumlahAjuan = dataPengajuan.filter(p => p.siswa === currentUser.name).length;
+                const sisaAjuan = Math.max(0, 2 - jumlahAjuan);
+
                 html = `
                     <div class="card table-card p-4" style="max-width: 650px;">
-                        <h6 class="fw-bold mb-3">Ajukan Penempatan PKL</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Ajukan Penempatan PKL</h6>
+                            <span class="badge ${sisaAjuan > 0 ? 'bg-primary' : 'bg-danger'}">Sisa Kuota Pengajuan: ${sisaAjuan} dari 2</span>
+                        </div>
                         <form id="submit-pengajuan">
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Pilih Tempat PKL</label>
-                                <select id="pilih-tempat-ajukan" class="form-select" required>
+                                <select id="pilih-tempat-ajukan" class="form-select" ${sisaAjuan === 0 ? 'disabled' : ''} required>
                                     ${dataTempatPKL.map(t => `<option value="${t.nama}">${t.nama} - ${t.lokasi} (Kuota: ${t.kuota})</option>`).join('')}
                                 </select>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label small fw-semibold">Tanggal Mulai</label>
-                                    <input type="date" class="form-control" value="2026-12-01" required>
+                                    <input type="date" class="form-control" value="2026-12-01" ${sisaAjuan === 0 ? 'disabled' : ''} required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label small fw-semibold">Tanggal Selesai</label>
-                                    <input type="date" class="form-control" value="2027-02-28" required>
+                                    <input type="date" class="form-control" value="2027-02-28" ${sisaAjuan === 0 ? 'disabled' : ''} required>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Alasan Memilih Tempat PKL</label>
-                                <textarea class="form-control" rows="3" placeholder="Jelaskan kesesuaian kompetensi Anda dengan perusahaan ini..." required></textarea>
+                                <textarea class="form-control" rows="3" placeholder="Jelaskan kesesuaian kompetensi Anda dengan perusahaan ini..." ${sisaAjuan === 0 ? 'disabled' : ''} required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-navy"><i class="bi bi-send me-1"></i>Kirim Pengajuan</button>
+                            <button type="submit" class="btn btn-navy" ${sisaAjuan === 0 ? 'disabled' : ''}>
+                                <i class="bi bi-send me-1"></i>Kirim Pengajuan
+                            </button>
                         </form>
                     </div>
                 `;
@@ -1109,8 +1117,13 @@
             // 4. STATUS PENGAJUAN
             else if (page === 'status-pengajuan') {
                 $('#page-title').text('Status Pengajuan PKL');
+                const daftarMilikSiswa = dataPengajuan.filter(p => p.siswa === currentUser.name);
                 html = `
                     <div class="card table-card p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0">Riwayat Pengajuan Tempat PKL Anda</h6>
+                            <span class="badge bg-secondary">Total: ${daftarMilikSiswa.length} / 2 Tempat</span>
+                        </div>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
                                 <thead>
@@ -1122,7 +1135,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${dataPengajuan.map((p, i) => {
+                                    ${daftarMilikSiswa.map((p, i) => {
                                         let badge = p.status === 'Diterima' ? 'bg-success' : (p.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark');
                                         return `
                                             <tr>
@@ -1747,19 +1760,33 @@
             loadPage('kelola-akun');
             showNotifToast('Status akun pengguna berhasil diperbarui.');
         });
-
-        // Submit Pengajuan Siswa
+// Submit Pengajuan Siswa (Maksimal 2 tempat PKL per siswa & tidak boleh duplikat)
         $(document).on('submit', '#submit-pengajuan', function(e) {
             e.preventDefault();
+            const tempatDipilih = $('#pilih-tempat-ajukan').val();
+            const pengajuanSiswa = dataPengajuan.filter(p => p.siswa === currentUser.name);
+
+            // Cek batas maksimal 2 pengajuan
+            if (pengajuanSiswa.length >= 2) {
+                showNotifToast('Batas pengajuan tercapai! Setiap siswa hanya dapat mengajukan maksimal 2 tempat PKL.', 'danger');
+                return;
+            }
+
+            // Cek agar tidak mengajukan tempat yang sama dua kali
+            if (pengajuanSiswa.some(p => p.tempat === tempatDipilih)) {
+                showNotifToast(`Anda sudah pernah mengajukan PKL di ${tempatDipilih}. Silakan pilih tempat lain.`, 'warning');
+                return;
+            }
+
             dataPengajuan.push({
                 id: Date.now(),
                 siswa: currentUser.name,
-                tempat: $('#pilih-tempat-ajukan').val(),
+                tempat: tempatDipilih,
                 tanggal: '2026-11-13',
                 status: 'Menunggu'
             });
             loadPage('status-pengajuan');
-            showNotifToast('Pengajuan tempat PKL berhasil dikirim dan menunggu verifikasi.');
+            showNotifToast(`Pengajuan tempat PKL berhasil dikirim (${pengajuanSiswa.length + 1}/2 kuota pengajuan).`);
         });
 
         // CRUD Monitoring Siswa
