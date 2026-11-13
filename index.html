@@ -187,6 +187,16 @@
             color: #f59e0b;
         }
 
+        /* Mode Pratinjau Modal Statis untuk Capture Figma */
+        .figma-modal-static {
+            position: static !important;
+            display: block !important;
+            opacity: 1 !important;
+            background: rgba(15, 41, 66, 0.45);
+            padding: 30px 15px;
+            min-height: 100vh;
+        }
+
         @media (max-width: 768px) {
             #sidebar {
                 margin-left: -260px;
@@ -465,7 +475,7 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                             <li><a class="dropdown-item small menu-item" data-page="profil"><i class="bi bi-person me-2"></i>Profil Saya</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item small text-danger" id="btn-logout" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item small text-danger" id="btn-logout" href="?"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -717,6 +727,53 @@
         };
 
         // =====================================================================
+        // SINKRONISASI URL PARAMETER & MASUK DASHBOARD (MENDUKUNG FIGMA)
+        // =====================================================================
+        function syncUrlParam(role, page) {
+            if (window.history && window.history.replaceState) {
+                const url = new URL(window.location);
+                url.searchParams.set('role', role);
+                url.searchParams.set('page', page);
+                url.searchParams.delete('modal');
+                window.history.replaceState({}, '', url);
+            }
+        }
+
+        function masukKeDashboard(akun, targetPage = null, instant = false) {
+            currentUser = akun;
+            const role = akun.role;
+            const activePage = targetPage || menusByRole[role][0].id;
+
+            $('#badge-role').text(role.toUpperCase());
+            $('#nav-username').text(akun.name);
+
+            let menuHtml = '';
+            menusByRole[role].forEach((m) => {
+                const isActive = (m.id === activePage) ? 'active' : '';
+                menuHtml += `
+                    <a class="nav-link-custom menu-item ${isActive}" href="?role=${role}&page=${m.id}" data-page="${m.id}">
+                        <i class="bi ${m.icon}"></i>
+                        <span>${m.label}</span>
+                    </a>
+                `;
+            });
+            $('#sidebar-menu').html(menuHtml);
+
+            if (instant) {
+                // Render langsung tanpa animasi fade agar plugin html.to.design Figma langsung menangkap layar
+                $('#login-page').hide();
+                $('#app-wrapper').show();
+                loadPage(activePage, true);
+            } else {
+                syncUrlParam(role, activePage);
+                $('#login-page').fadeOut(150, function() {
+                    $('#app-wrapper').fadeIn(200);
+                    loadPage(activePage, false);
+                });
+            }
+        }
+
+        // =====================================================================
         // PROSES LOGIN OTOMATIS BERDASARKAN AKUN / NISN / NIP (TANPA PILIH ROLE)
         // =====================================================================
         $('#toggle-pass-btn').on('click', function() {
@@ -738,7 +795,6 @@
 
             $('#login-alert, #login-success').addClass('d-none');
 
-            // Cocokkan Username, Email, atau NISN/NIP dengan password atau NISN/NIP
             const akun = daftarAkun.find(a =>
                 a.username.toLowerCase() === identity ||
                 a.email.toLowerCase() === identity ||
@@ -760,30 +816,8 @@
                 return;
             }
 
-            // Login berhasil -> Role dibaca langsung dari akun, bukan dari form
-            currentUser = akun;
             logAktivitas.unshift({ waktu: 'Baru saja', user: akun.username, aktivitas: `Login ke sistem sebagai ${akun.role.toUpperCase()}` });
-
-            $('#badge-role').text(akun.role.toUpperCase());
-            $('#nav-username').text(akun.name);
-
-            const activePage = menusByRole[akun.role][0].id;
-            let menuHtml = '';
-            menusByRole[akun.role].forEach((m) => {
-                const isActive = (m.id === activePage) ? 'active' : '';
-                menuHtml += `
-                    <a class="nav-link-custom menu-item ${isActive}" href="#" data-page="${m.id}">
-                        <i class="bi ${m.icon}"></i>
-                        <span>${m.label}</span>
-                    </a>
-                `;
-            });
-            $('#sidebar-menu').html(menuHtml);
-
-            $('#login-page').fadeOut(150, function() {
-                $('#app-wrapper').fadeIn(200);
-                loadPage(activePage);
-            });
+            masukKeDashboard(akun, null, false);
         });
 
         // Verifikasi NISN pada Modal Registrasi Siswa
@@ -889,6 +923,11 @@
             e.preventDefault();
             currentUser = null;
             $('#form-login')[0].reset();
+            if (window.history && window.history.replaceState) {
+                const url = new URL(window.location);
+                url.search = '';
+                window.history.replaceState({}, '', url);
+            }
             $('#app-wrapper').fadeOut(150, function() {
                 $('#login-page').css('display', 'flex').hide().fadeIn(200);
             });
@@ -914,7 +953,8 @@
             $('.menu-item').removeClass('active');
             $(`.menu-item[data-page="${target}"]`).addClass('active');
             $('#sidebar').removeClass('mobile-open');
-            loadPage(target);
+            syncUrlParam(currentUser.role, target);
+            loadPage(target, false);
         });
 
         // =====================================================================
@@ -930,7 +970,7 @@
             $('#content-area').prepend(alertHtml);
         }
 
-        function loadPage(page) {
+        function loadPage(page, instant = false) {
             let html = '';
 
             // 1. DASHBOARD SISWA
@@ -1595,7 +1635,11 @@
                 `;
             }
 
-            $('#content-area').hide().html(html).fadeIn(150);
+            if (instant) {
+                $('#content-area').html(html).show();
+            } else {
+                $('#content-area').hide().html(html).fadeIn(150);
+            }
         }
 
         // =====================================================================
@@ -1894,6 +1938,46 @@
                 showNotifToast('Password akun berhasil diperbarui.');
             } else {
                 showNotifToast('Tidak ada perubahan password yang dimasukkan.', 'info');
+            }
+        });
+
+        // =====================================================================
+        // BACA PARAMETER URL OTOMATIS UNTUK IMPORT LANGSUNG KE FIGMA
+        // =====================================================================
+        $(document).ready(function() {
+            const params = new URLSearchParams(window.location.search);
+            const roleParam = params.get('role');
+            const pageParam = params.get('page');
+            const modalParam = params.get('modal');
+
+            // Mode Capture Modal Statis di Figma
+            if (modalParam === 'registrasi-siswa') {
+                $('#login-page').hide();
+                $('#modalRegSiswa').addClass('figma-modal-static show');
+                return;
+            }
+            if (modalParam === 'aktivasi-alumni') {
+                $('#login-page').hide();
+                $('#modalAktivasiAlumni').addClass('figma-modal-static show');
+                return;
+            }
+            if (modalParam === 'detail-tempat') {
+                $('#login-page').hide();
+                isiModalDetail(1);
+                $('#modalDetailTempat').addClass('figma-modal-static show');
+                return;
+            }
+            if (modalParam === 'form-tempat') {
+                $('#login-page').hide();
+                $('#modalFormTempat').addClass('figma-modal-static show');
+                return;
+            }
+
+            // Mode Capture Langsung ke Dashboard / Sub-Halaman per Role
+            if (roleParam || pageParam) {
+                const targetRole = menusByRole[roleParam] ? roleParam : 'siswa';
+                const akunDefault = daftarAkun.find(a => a.role === targetRole) || daftarAkun[2];
+                masukKeDashboard(akunDefault, pageParam, true);
             }
         });
     </script>
