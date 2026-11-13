@@ -25,22 +25,19 @@
             background-color: var(--bg-light);
             color: #1e293b;
             overflow-x: hidden;
+            margin: 0;
+            padding: 0;
         }
 
         /* Halaman Login */
-      #login-page {
-    min-height: 100vh;
-    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-primary) 60%, var(--navy-light) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-/* Tambahkan kode ini */
-#login-page {
-    display: none !important;
-}
+        #login-page {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-primary) 60%, var(--navy-light) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
 
         .login-card {
             background: #ffffff;
@@ -73,9 +70,11 @@
 
         /* Layout Dashboard */
         #app-wrapper {
-    display: block;
-    min-height: 100vh;
-}
+            display: none;
+            min-height: 100vh;
+            width: 100%;
+        }
+
         #sidebar {
             width: 260px;
             background-color: var(--navy-primary);
@@ -83,6 +82,9 @@
             min-height: 100vh;
             transition: all 0.3s ease;
             position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
             z-index: 1030;
         }
 
@@ -117,6 +119,7 @@
         #main-content {
             margin-left: 260px;
             width: calc(100% - 260px);
+            min-height: 100vh;
             transition: all 0.3s ease;
         }
 
@@ -183,6 +186,16 @@
             color: #f59e0b;
         }
 
+        /* Mode Pratinjau Modal Statis untuk Figma */
+        .figma-modal-static {
+            position: static !important;
+            display: block !important;
+            opacity: 1 !important;
+            background: rgba(15, 41, 66, 0.45);
+            padding: 30px 15px;
+            min-height: 100vh;
+        }
+
         @media (max-width: 768px) {
             #sidebar {
                 margin-left: -260px;
@@ -240,7 +253,7 @@
                 </form>
 
                 <hr class="my-3">
-                <p class="small text-muted text-center mb-2">Akses Cepat Demo (Prototype GitHub Pages):</p>
+                <p class="small text-muted text-center mb-2">Akses Cepat Demo & Pratinjau Role:</p>
                 <div class="d-grid gap-2">
                     <button type="button" class="btn btn-outline-primary btn-sm quick-login" data-role="siswa" data-user="Andi Pratama (XI RPL 1)">
                         <i class="bi bi-person-badge me-1"></i> Masuk sebagai Siswa
@@ -257,7 +270,7 @@
     </div>
 
     <!-- =====================================================================
-         HALAMAN UTAMA DASHBOARD (SETELAH LOGIN)
+         HALAMAN UTAMA DASHBOARD (SETELAH LOGIN / PRATINJAU URL)
     ====================================================================== -->
     <div id="app-wrapper">
         <!-- Sidebar Navigasi -->
@@ -273,7 +286,7 @@
                 <button class="btn btn-sm text-white d-md-none" id="close-sidebar"><i class="bi bi-x-lg"></i></button>
             </div>
             <nav class="mt-3" id="sidebar-menu">
-                <!-- Menu dimuat dinamis oleh jQuery sesuai role -->
+                <!-- Menu dimuat dinamis sesuai role -->
             </nav>
         </aside>
 
@@ -285,9 +298,23 @@
                     <button class="btn btn-light border" id="toggle-sidebar">
                         <i class="bi bi-list fs-5"></i>
                     </button>
-                    <h6 class="mb-0 fw-bold text-dark d-none sm-block" id="page-title">Dashboard</h6>
+                    <h6 class="mb-0 fw-bold text-dark" id="page-title">Dashboard</h6>
                 </div>
                 <div class="d-flex align-items-center gap-3">
+                    <!-- Quick Role Switcher untuk memudahkan perpindahan role saat capture Figma -->
+                    <div class="dropdown d-none d-lg-block" id="figma-role-switcher">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-layers me-1"></i> Ganti Role Pratinjau
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><a class="dropdown-item small switch-role-url" href="?role=siswa&page=dashboard-siswa">Role: Siswa</a></li>
+                            <li><a class="dropdown-item small switch-role-url" href="?role=admin&page=dashboard-admin">Role: Guru Pembimbing / Admin</a></li>
+                            <li><a class="dropdown-item small switch-role-url" href="?role=alumni&page=dashboard-alumni">Role: Alumni</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item small text-primary" href="?">Halaman Login</a></li>
+                        </ul>
+                    </div>
+
                     <!-- Notifikasi -->
                     <div class="dropdown">
                         <button class="btn btn-light position-relative" data-bs-toggle="dropdown">
@@ -310,7 +337,7 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                             <li><a class="dropdown-item small menu-item" data-page="profil"><i class="bi bi-person me-2"></i>Profil Saya</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item small text-danger" id="btn-logout" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item small text-danger" id="btn-logout" href="?"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>
                     </div>
                 </div>
@@ -326,7 +353,7 @@
     <!-- Modal Detail Tempat PKL -->
     <div class="modal fade" id="modalDetailTempat" tabindex="-1">
         <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header text-white" style="background-color: var(--navy-primary);">
                     <h5 class="modal-title" id="detail-nama">Detail Tempat PKL</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -339,7 +366,7 @@
     <!-- Modal Tambah/Edit Tempat PKL (Admin) -->
     <div class="modal fade" id="modalFormTempat" tabindex="-1">
         <div class="modal-dialog">
-            <div class="modal-content border-0">
+            <div class="modal-content border-0 shadow">
                 <div class="modal-header text-white" style="background-color: var(--navy-primary);">
                     <h5 class="modal-title" id="modalTempatTitle">Tambah Tempat PKL</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -349,12 +376,12 @@
                         <input type="hidden" id="edit-tempat-id">
                         <div class="mb-2">
                             <label class="form-label small fw-semibold">Nama Perusahaan / Instansi</label>
-                            <input type="text" id="input-nama-perusahaan" class="form-control" required>
+                            <input type="text" id="input-nama-perusahaan" class="form-control" placeholder="Contoh: PT. Maju Jaya Abadi" required>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-2">
                                 <label class="form-label small fw-semibold">Lokasi / Kota</label>
-                                <input type="text" id="input-lokasi" class="form-control" required>
+                                <input type="text" id="input-lokasi" class="form-control" placeholder="Contoh: Kota Metro" required>
                             </div>
                             <div class="col-md-6 mb-2">
                                 <label class="form-label small fw-semibold">Kuota Siswa</label>
@@ -371,11 +398,11 @@
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-semibold">Bidang Kegiatan</label>
-                            <input type="text" id="input-bidang" class="form-control" required>
+                            <input type="text" id="input-bidang" class="form-control" placeholder="Contoh: Pengembangan Web & Aplikasi" required>
                         </div>
                         <div class="mb-2">
                             <label class="form-label small fw-semibold">Persyaratan</label>
-                            <textarea id="input-syarat" class="form-control" rows="2" required></textarea>
+                            <textarea id="input-syarat" class="form-control" rows="2" placeholder="Tuliskan kualifikasi yang dibutuhkan..." required></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -395,7 +422,13 @@
         // =====================================================================
         // DATA SIMULASI (SESUAI SEEDER DATABASE db_pkl PADA SRS)
         // =====================================================================
-        let currentUser = { role: 'siswa', name: 'Andi Pratama (XI RPL 1)' };
+        const roleProfiles = {
+            siswa: { role: 'siswa', name: 'Andi Pratama (XI RPL 1)', nis_nip: '2513025008', jurusan: 'Rekayasa Perangkat Lunak', email: 'andi@siswa.smk.sch.id' },
+            admin: { role: 'admin', name: 'Budi Santoso, S.Kom.', nis_nip: '198504122010011005', jurusan: 'Guru Pembimbing / Admin', email: 'guru@smk.sch.id' },
+            alumni: { role: 'alumni', name: 'Dika Saputra (Alumni 2025)', nis_nip: '2413025042', jurusan: 'Rekayasa Perangkat Lunak', email: 'dika@alumni.smk.sch.id' }
+        };
+
+        let currentUser = roleProfiles.siswa;
 
         let dataTempatPKL = [
             {
@@ -494,18 +527,34 @@
         };
 
         // =====================================================================
-        // AUTENTIKASI & NAVIGASI
+        // AUTENTIKASI, ROUTING URL PARAMETER (UNTUK FIGMA), & NAVIGASI
         // =====================================================================
-        function masukSistem(role, nama) {
-            currentUser = { role: role, name: nama };
-            $('#badge-role').text(role.toUpperCase());
-            $('#nav-username').text(nama);
+        function syncUrlParam(role, page) {
+            if (window.history && window.history.replaceState) {
+                const url = new URL(window.location);
+                url.searchParams.set('role', role);
+                url.searchParams.set('page', page);
+                url.searchParams.delete('modal');
+                window.history.replaceState({}, '', url);
+            }
+        }
+
+        function masukSistem(role, nama, targetPage = null, instant = false) {
+            const validRole = menusByRole[role] ? role : 'siswa';
+            currentUser = Object.assign({}, roleProfiles[validRole]);
+            if (nama) currentUser.name = nama;
+
+            $('#badge-role').text(validRole.toUpperCase());
+            $('#nav-username').text(currentUser.name);
+
+            const activePage = targetPage || menusByRole[validRole][0].id;
 
             // Render Sidebar Menu
             let menuHtml = '';
-            menusByRole[role].forEach((m, index) => {
+            menusByRole[validRole].forEach((m) => {
+                const isActive = (m.id === activePage) ? 'active' : '';
                 menuHtml += `
-                    <a class="nav-link-custom menu-item ${index === 0 ? 'active' : ''}" data-page="${m.id}">
+                    <a class="nav-link-custom menu-item ${isActive}" href="?role=${validRole}&page=${m.id}" data-page="${m.id}">
                         <i class="bi ${m.icon}"></i>
                         <span>${m.label}</span>
                     </a>
@@ -513,10 +562,18 @@
             });
             $('#sidebar-menu').html(menuHtml);
 
-            $('#login-page').fadeOut(200, function() {
-                $('#app-wrapper').fadeIn(250);
-                loadPage(menusByRole[role][0].id);
-            });
+            if (instant) {
+                // Langsung tampil tanpa animasi fade agar HTML to Design menangkap DOM 100% solid
+                $('#login-page').hide();
+                $('#app-wrapper').show();
+                loadPage(activePage, true);
+            } else {
+                syncUrlParam(validRole, activePage);
+                $('#login-page').fadeOut(150, function() {
+                    $('#app-wrapper').fadeIn(200);
+                    loadPage(activePage, false);
+                });
+            }
         }
 
         $('#form-login').on('submit', function(e) {
@@ -529,22 +586,22 @@
                 $('#login-alert').removeClass('d-none').text('Username dan password wajib diisi!');
                 return;
             }
-            const defaultNames = {
-                siswa: 'Andi Pratama (XI RPL 1)',
-                admin: 'Budi Santoso, S.Kom.',
-                alumni: 'Dika Saputra (Alumni 2025)'
-            };
-            masukSistem(role, defaultNames[role]);
+            masukSistem(role, roleProfiles[role].name, null, false);
         });
 
         $('.quick-login').on('click', function() {
-            masukSistem($(this).data('role'), $(this).data('user'));
+            masukSistem($(this).data('role'), $(this).data('user'), null, false);
         });
 
         $('#btn-logout').on('click', function(e) {
             e.preventDefault();
-            $('#app-wrapper').fadeOut(200, function() {
-                $('#login-page').fadeIn(250);
+            if (window.history && window.history.replaceState) {
+                const url = new URL(window.location);
+                url.search = '';
+                window.history.replaceState({}, '', url);
+            }
+            $('#app-wrapper').fadeOut(150, function() {
+                $('#login-page').css('display', 'flex').hide().fadeIn(200);
             });
         });
 
@@ -562,11 +619,14 @@
             $('#sidebar').removeClass('mobile-open');
         });
 
-        $(document).on('click', '.menu-item', function() {
+        $(document).on('click', '.menu-item', function(e) {
+            e.preventDefault();
+            const target = $(this).data('page');
             $('.menu-item').removeClass('active');
-            $(this).addClass('active');
+            $(`.menu-item[data-page="${target}"]`).addClass('active');
             $('#sidebar').removeClass('mobile-open');
-            loadPage($(this).data('page'));
+            syncUrlParam(currentUser.role, target);
+            loadPage(target, false);
         });
 
         // =====================================================================
@@ -582,7 +642,7 @@
             $('#content-area').prepend(alertHtml);
         }
 
-        function loadPage(page) {
+        function loadPage(page, instant = false) {
             let html = '';
 
             // 1. DASHBOARD SISWA
@@ -1141,6 +1201,16 @@
                                 <label class="form-label small fw-semibold">Nama Lengkap</label>
                                 <input type="text" class="form-control" value="${currentUser.name}">
                             </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">NIS / NIP</label>
+                                    <input type="text" class="form-control" value="${currentUser.nis_nip}" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">Email</label>
+                                    <input type="email" class="form-control" value="${currentUser.email}">
+                                </div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Password Baru (Opsional)</label>
                                 <input type="password" class="form-control" placeholder="Kosongkan jika tidak ingin mengubah">
@@ -1151,7 +1221,11 @@
                 `;
             }
 
-            $('#content-area').hide().html(html).fadeIn(200);
+            if (instant) {
+                $('#content-area').html(html).show();
+            } else {
+                $('#content-area').hide().html(html).fadeIn(150);
+            }
         }
 
         // =====================================================================
@@ -1192,19 +1266,9 @@
             $('#list-tempat-container').html(cards || '<div class="col-12 text-center text-muted py-4">Data tempat PKL tidak ditemukan.</div>');
         }
 
-        $(document).on('keyup', '#cari-tempat', renderKartuTempat);
-        $(document).on('change', '#filter-jurusan', renderKartuTempat);
-        $(document).on('click', '#btn-reset-filter', function() {
-            $('#cari-tempat').val('');
-            $('#filter-jurusan').val('');
-            renderKartuTempat();
-        });
-
-        // Modal Detail Tempat PKL
-        $(document).on('click', '.lihat-detail', function() {
-            const id = $(this).data('id');
-            const t = dataTempatPKL.find(x => x.id === id);
-            const ulasanTempat = dataUlasan.filter(u => u.id_tempat === id);
+        function isiModalDetail(id) {
+            const t = dataTempatPKL.find(x => x.id === id) || dataTempatPKL[0];
+            const ulasanTempat = dataUlasan.filter(u => u.id_tempat === t.id);
 
             $('#detail-nama').text(t.nama);
             $('#detail-body').html(`
@@ -1225,6 +1289,19 @@
                     </div>
                 `).join('') : '<p class="small text-muted">Belum ada ulasan untuk tempat ini.</p>'}
             `);
+        }
+
+        $(document).on('keyup', '#cari-tempat', renderKartuTempat);
+        $(document).on('change', '#filter-jurusan', renderKartuTempat);
+        $(document).on('click', '#btn-reset-filter', function() {
+            $('#cari-tempat').val('');
+            $('#filter-jurusan').val('');
+            renderKartuTempat();
+        });
+
+        // Modal Detail Tempat PKL
+        $(document).on('click', '.lihat-detail', function() {
+            isiModalDetail($(this).data('id'));
             new bootstrap.Modal('#modalDetailTempat').show();
         });
 
@@ -1395,6 +1472,42 @@
         $(document).on('submit', '#form-profil', function(e) {
             e.preventDefault();
             showNotifToast('Profil pengguna berhasil diperbarui.');
+        });
+
+        // =====================================================================
+        // INISIALISASI OTOMATIS BERDASARKAN PARAMETER URL (UNTUK HTML TO DESIGN)
+        // =====================================================================
+        $(document).ready(function() {
+            const params = new URLSearchParams(window.location.search);
+            const roleParam = params.get('role');
+            const pageParam = params.get('page');
+            const modalParam = params.get('modal');
+            const cleanParam = params.get('clean');
+
+            // Sembunyikan switcher pratinjau jika diminta tampilan 100% bersih
+            if (cleanParam === '1') {
+                $('#figma-role-switcher').remove();
+            }
+
+            if (modalParam === 'detail') {
+                $('#login-page').hide();
+                $('#app-wrapper').hide();
+                isiModalDetail(1);
+                $('#modalDetailTempat').addClass('figma-modal-static show');
+                return;
+            }
+
+            if (modalParam === 'form-tempat') {
+                $('#login-page').hide();
+                $('#app-wrapper').hide();
+                $('#modalFormTempat').addClass('figma-modal-static show');
+                return;
+            }
+
+            if (roleParam || pageParam) {
+                const resolvedRole = roleParam || 'siswa';
+                masukSistem(resolvedRole, null, pageParam, true);
+            }
         });
     </script>
 </body>
