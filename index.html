@@ -28,14 +28,19 @@
         }
 
         /* Halaman Login */
-        #login-page {
-            min-height: 100vh;
-            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-primary) 60%, var(--navy-light) 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+      #login-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-primary) 60%, var(--navy-light) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+/* Tambahkan kode ini */
+#login-page {
+    display: none !important;
+}
 
         .login-card {
             background: #ffffff;
@@ -68,10 +73,9 @@
 
         /* Layout Dashboard */
         #app-wrapper {
-            display: none;
-            min-height: 100vh;
-        }
-
+    display: block;
+    min-height: 100vh;
+}
         #sidebar {
             width: 260px;
             background-color: var(--navy-primary);
