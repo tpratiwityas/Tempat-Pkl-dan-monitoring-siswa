@@ -187,6 +187,11 @@
             color: #f59e0b;
         }
 
+        #badge-role {
+            white-space: normal;
+            text-align: left;
+        }
+
         /* Mode Pratinjau Modal Statis untuk Capture Figma */
         .figma-modal-static {
             position: static !important;
@@ -412,7 +417,7 @@
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body small">
-                    <p class="mb-2">Untuk keamanan akun sekolah, silakan hubungi <b>Admin Sistem PKL</b> atau gunakan <b>NISN / NIP</b> Anda sebagai kredensial verifikasi sementara.</p>
+                    <p class="mb-2">Untuk keamanan akun sekolah, silakan hubungi <b>Admin/Guru Pembimbing</b> atau gunakan <b>NISN / NIP</b> Anda sebagai kredensial verifikasi sementara.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-navy btn-sm w-100" data-bs-dismiss="modal">Mengerti</button>
@@ -438,7 +443,7 @@
                 <button class="btn btn-sm text-white d-md-none" id="close-sidebar"><i class="bi bi-x-lg"></i></button>
             </div>
             <nav class="mt-3" id="sidebar-menu">
-                <!-- Menu dimuat dinamis sesuai role akun dari database -->
+                <!-- Menu dimuat dinamis sesuai role akun -->
             </nav>
         </aside>
 
@@ -501,7 +506,7 @@
         </div>
     </div>
 
-    <!-- Modal Tambah/Edit Tempat PKL (Admin) -->
+    <!-- Modal Tambah/Edit Tempat PKL (Admin/Guru Pembimbing) -->
     <div class="modal fade" id="modalFormTempat" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
@@ -558,7 +563,16 @@
 
     <script>
         // =====================================================================
-        // DATA MASTER SEKOLAH (NISN & NIP) DAN AKUN PENGGUNA (4 ROLE)
+        // KONFIGURASI ROLE (HANYA 3 ROLE: siswa, admin [Admin/Guru Pembimbing], alumni)
+        // =====================================================================
+        const ROLE_LABEL = {
+            siswa: 'Siswa',
+            admin: 'Admin/Guru Pembimbing',
+            alumni: 'Alumni'
+        };
+
+        // =====================================================================
+        // DATA MASTER SEKOLAH (NISN & NIP) DAN AKUN PENGGUNA (3 AKUN PENGUJIAN)
         // =====================================================================
         let masterDataSekolah = [
             { nisn: '2513025008', nama: 'Andi Pratama', kelas: 'XI RPL 1', jurusan: 'Rekayasa Perangkat Lunak', status_lulus: false, terdaftar: true },
@@ -567,28 +581,18 @@
             { nisn: '2413025099', nama: 'Rina Marlina', kelas: 'XII MM 1', jurusan: 'Multimedia', status_lulus: true, terdaftar: false }
         ];
 
+        // Akun dummy 'admin' sudah dihapus. 'budi' adalah satu-satunya akun Admin/Guru Pembimbing.
         let daftarAkun = [
-            {
-                id: 1,
-                username: 'admin',
-                email: 'admin@smk.sch.id',
-                nis_nip: '198001012005011001',
-                password: '123456',
-                role: 'admin',
-                status: 'aktif',
-                name: 'Administrator Sekolah',
-                jurusan: 'Manajemen Sistem PKL'
-            },
             {
                 id: 2,
                 username: 'budi',
                 email: 'guru@smk.sch.id',
                 nis_nip: '198504122010011005',
                 password: '123456',
-                role: 'guru',
+                role: 'admin',
                 status: 'aktif',
                 name: 'Budi Santoso, S.Kom.',
-                jurusan: 'Guru Pembimbing RPL'
+                jurusan: 'Admin/Guru Pembimbing'
             },
             {
                 id: 3,
@@ -684,29 +688,118 @@
             { id: 1, alumni: 'Dika Saputra', id_tempat: 1, tempat: 'PT. Maju Jaya Abadi', rating: 5, komentar: 'Mentor sangat ramah dan membimbing dari nol. Lingkungan kerja nyaman.', tanggal: '2026-09-15' }
         ];
 
-        let logAktivitas = [
-            { waktu: '2026-11-13 08:30', user: 'admin', aktivitas: 'Memverifikasi data master NISN siswa kelas XI' },
-            { waktu: '2026-11-13 09:15', user: 'budi', aktivitas: 'Memeriksa log monitoring Andi Pratama' }
+        // =====================================================================
+        // LOG AKTIVITAS (RIWAYAT AKTIVITAS) - DISIMPAN PERMANEN, WAKTU ASIA/JAKARTA
+        // ---------------------------------------------------------------------
+        // Proyek ini adalah aplikasi satu file tanpa server, sehingga log disimpan
+        // di localStorage browser (tetap ada setelah refresh / tutup tab).
+        // Untuk disimpan ke database MySQL sungguhan, isi LOG_ENDPOINT dengan URL
+        // skrip server (lihat petunjuk SQL & PHP). Pencatatan ke server akan
+        // dikirim bersamaan dengan penyimpanan lokal.
+        // =====================================================================
+        const LOG_STORAGE_KEY = 'simpkl_log_aktivitas_v1';
+        const SESSION_KEY = 'simpkl_session_v1';
+        const LOG_ENDPOINT = null; // contoh: 'api/simpan_log.php'
+        const TZ = 'Asia/Jakarta';
+
+        const LOG_JENIS = [
+            'Login', 'Logout', 'Registrasi Akun', 'Pengajuan PKL', 'Status Pengajuan',
+            'Monitoring', 'Penilaian PKL', 'Data Tempat PKL', 'Data Akun/NISN',
+            'Pengalaman PKL', 'Ulasan & Rating', 'Profil'
         ];
 
+        function logSeed() {
+            return [
+                { id: 1, waktu: '2026-11-13T08:30:00+07:00', username: 'budi', nama: 'Budi Santoso, S.Kom.', role: 'admin', jenis: 'Data Akun/NISN', keterangan: 'Memverifikasi data master NISN siswa kelas XI' },
+                { id: 2, waktu: '2026-11-13T09:15:00+07:00', username: 'budi', nama: 'Budi Santoso, S.Kom.', role: 'admin', jenis: 'Monitoring', keterangan: 'Memeriksa laporan monitoring Andi Pratama' }
+            ];
+        }
+
+        function muatLog() {
+            try {
+                const raw = localStorage.getItem(LOG_STORAGE_KEY);
+                if (raw) {
+                    const arr = JSON.parse(raw);
+                    if (Array.isArray(arr)) return arr;
+                }
+            } catch (err) { /* abaikan, gunakan seed */ }
+            const seed = logSeed();
+            try { localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(seed)); } catch (err) {}
+            return seed;
+        }
+
+        let logAktivitas = muatLog();
+
+        function simpanLog() {
+            try { localStorage.setItem(LOG_STORAGE_KEY, JSON.stringify(logAktivitas)); }
+            catch (err) { console.warn('Log aktivitas gagal disimpan ke penyimpanan lokal.'); }
+        }
+
+        // Pencatatan otomatis. Parameter 'aktor' dipakai saat belum ada sesi (login/registrasi).
+        // JANGAN pernah mengirim password atau data sensitif ke dalam 'keterangan'.
+        function catatLog(jenis, keterangan, aktor) {
+            const u = aktor || currentUser;
+            if (!u) return;
+            const entri = Object.freeze({
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                waktu: new Date().toISOString(),
+                username: u.username,
+                nama: u.name,
+                role: u.role,
+                jenis: jenis,
+                keterangan: keterangan
+            });
+            logAktivitas.unshift(entri);
+            simpanLog();
+            if (LOG_ENDPOINT) {
+                try {
+                    fetch(LOG_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ jenis: jenis, keterangan: keterangan }),
+                        credentials: 'same-origin',
+                        keepalive: true
+                    });
+                } catch (err) { /* abaikan */ }
+            }
+        }
+
+        function formatWIB(iso) {
+            const d = new Date(iso);
+            if (isNaN(d)) return '-';
+            return new Intl.DateTimeFormat('id-ID', {
+                timeZone: TZ, day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).format(d).replace(/\./g, ':') + ' WIB';
+        }
+
+        function tanggalWIB(iso) {
+            // Hasil: YYYY-MM-DD menurut zona waktu Asia/Jakarta
+            return new Date(iso).toLocaleDateString('en-CA', { timeZone: TZ });
+        }
+
+        function hariIniWIB() {
+            return tanggalWIB(new Date().toISOString());
+        }
+
+        function esc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
         // =====================================================================
-        // KONFIGURASI MENU PER ROLE (ADMIN, GURU, SISWA, ALUMNI)
+        // KONFIGURASI MENU PER ROLE (ADMIN/GURU PEMBIMBING, SISWA, ALUMNI)
         // =====================================================================
         const menusByRole = {
             admin: [
-                { id: 'dashboard-admin', icon: 'bi-speedometer2', label: 'Dashboard Admin' },
+                { id: 'dashboard-admin', icon: 'bi-speedometer2', label: 'Dashboard Admin/Guru' },
                 { id: 'kelola-akun', icon: 'bi-people-fill', label: 'Manajemen Akun & NISN' },
                 { id: 'kelola-tempat', icon: 'bi-buildings', label: 'Manajemen Tempat PKL' },
                 { id: 'kelola-pengajuan', icon: 'bi-inboxes', label: 'Data Pengajuan PKL' },
                 { id: 'monitoring-admin', icon: 'bi-eye', label: 'Monitoring & Penilaian' },
-                { id: 'log-aktivitas', icon: 'bi-clock-history', label: 'Log Aktivitas' },
-                { id: 'profil', icon: 'bi-person-gear', label: 'Profil Admin' }
-            ],
-            guru: [
-                { id: 'dashboard-guru', icon: 'bi-speedometer2', label: 'Dashboard Guru' },
-                { id: 'kelola-pengajuan', icon: 'bi-inboxes', label: 'Pengajuan Siswa Bimbingan' },
-                { id: 'monitoring-admin', icon: 'bi-journal-check', label: 'Verifikasi & Penilaian PKL' },
-                { id: 'profil', icon: 'bi-person-gear', label: 'Profil Guru' }
+                { id: 'log-aktivitas', icon: 'bi-clock-history', label: 'Riwayat Aktivitas' },
+                { id: 'profil', icon: 'bi-person-gear', label: 'Profil Saya' }
             ],
             siswa: [
                 { id: 'dashboard-siswa', icon: 'bi-speedometer2', label: 'Dashboard Siswa' },
@@ -727,7 +820,23 @@
         };
 
         // =====================================================================
-        // SINKRONISASI URL PARAMETER & MASUK DASHBOARD (MENDUKUNG FIGMA)
+        // PEMERIKSAAN HAK AKSES (BUKAN HANYA MENYEMBUNYIKAN MENU)
+        // =====================================================================
+        function halamanBolehDiakses(role, page) {
+            return !!(menusByRole[role] && menusByRole[role].some(m => m.id === page));
+        }
+
+        // Dipanggil di awal setiap proses (event handler) yang mengubah data.
+        function izin(...roles) {
+            if (!currentUser || !roles.includes(currentUser.role)) {
+                if (currentUser) showNotifToast('Akses ditolak: fitur ini bukan hak akses role Anda.', 'danger');
+                return false;
+            }
+            return true;
+        }
+
+        // =====================================================================
+        // SINKRONISASI URL PARAMETER & MASUK DASHBOARD
         // =====================================================================
         function syncUrlParam(role, page) {
             if (window.history && window.history.replaceState) {
@@ -742,9 +851,16 @@
         function masukKeDashboard(akun, targetPage = null, instant = false) {
             currentUser = akun;
             const role = akun.role;
-            const activePage = targetPage || menusByRole[role][0].id;
+            let activePage = targetPage;
+            let ditolak = false;
+            if (!activePage || !halamanBolehDiakses(role, activePage)) {
+                ditolak = !!targetPage;
+                activePage = menusByRole[role][0].id;
+            }
 
-            $('#badge-role').text(role.toUpperCase());
+            try { sessionStorage.setItem(SESSION_KEY, akun.username); } catch (err) {}
+
+            $('#badge-role').text(ROLE_LABEL[role].toUpperCase());
             $('#nav-username').text(akun.name);
 
             let menuHtml = '';
@@ -759,13 +875,13 @@
             });
             $('#sidebar-menu').html(menuHtml);
 
+            syncUrlParam(role, activePage);
             if (instant) {
-                // Render langsung tanpa animasi fade agar plugin html.to.design Figma langsung menangkap layar
                 $('#login-page').hide();
                 $('#app-wrapper').show();
                 loadPage(activePage, true);
+                if (ditolak) showNotifToast('Akses ditolak: halaman tersebut bukan hak akses role Anda. Anda diarahkan ke dashboard.', 'danger');
             } else {
-                syncUrlParam(role, activePage);
                 $('#login-page').fadeOut(150, function() {
                     $('#app-wrapper').fadeIn(200);
                     loadPage(activePage, false);
@@ -807,7 +923,7 @@
             }
 
             if (akun.status !== 'aktif') {
-                $('#login-alert').removeClass('d-none').text('Akun Anda belum aktif atau sedang dinonaktifkan oleh Admin.');
+                $('#login-alert').removeClass('d-none').text('Akun Anda belum aktif atau sedang dinonaktifkan oleh Admin/Guru Pembimbing.');
                 return;
             }
 
@@ -816,7 +932,7 @@
                 return;
             }
 
-            logAktivitas.unshift({ waktu: 'Baru saja', user: akun.username, aktivitas: `Login ke sistem sebagai ${akun.role.toUpperCase()}` });
+            catatLog('Login', `Login ke sistem sebagai ${ROLE_LABEL[akun.role]}`, akun);
             masukKeDashboard(akun, null, false);
         });
 
@@ -854,6 +970,10 @@
                 $('#reg-alert').removeClass('d-none').text('Silakan klik "Cek NISN" terlebih dahulu untuk memverifikasi identitas.');
                 return;
             }
+            if (pass.length < 6) {
+                $('#reg-alert').removeClass('d-none').text('Password minimal 6 karakter.');
+                return;
+            }
             if (pass !== passConf) {
                 $('#reg-alert').removeClass('d-none').text('Konfirmasi password tidak cocok!');
                 return;
@@ -866,7 +986,7 @@
             const masterIdx = masterDataSekolah.findIndex(s => s.nisn === nisn);
             masterDataSekolah[masterIdx].terdaftar = true;
 
-            daftarAkun.push({
+            const akunBaru = {
                 id: Date.now(),
                 username: username,
                 email: `${username}@siswa.smk.sch.id`,
@@ -877,7 +997,9 @@
                 name: nama,
                 kelas: masterDataSekolah[masterIdx].kelas,
                 jurusan: masterDataSekolah[masterIdx].jurusan
-            });
+            };
+            daftarAkun.push(akunBaru);
+            catatLog('Registrasi Akun', `Registrasi akun siswa baru (NISN ${nisn})`, akunBaru);
 
             bootstrap.Modal.getInstance(document.getElementById('modalRegSiswa')).hide();
             $('#form-reg-siswa')[0].reset();
@@ -893,16 +1015,20 @@
 
             const masterAlumni = masterDataSekolah.find(s => s.nisn === nisn && s.status_lulus);
             if (!masterAlumni) {
-                $('#alumni-reg-alert').removeClass('d-none').text('NISN tidak ditemukan atau status siswa belum dinyatakan lulus oleh Admin.');
+                $('#alumni-reg-alert').removeClass('d-none').text('NISN tidak ditemukan atau status siswa belum dinyatakan lulus oleh Admin/Guru Pembimbing.');
                 return;
             }
             if (masterAlumni.terdaftar) {
                 $('#alumni-reg-alert').removeClass('d-none').text('Akun alumni dengan NISN ini sudah aktif. Silakan langsung login.');
                 return;
             }
+            if (daftarAkun.some(a => a.username.toLowerCase() === username.toLowerCase())) {
+                $('#alumni-reg-alert').removeClass('d-none').text('Username sudah digunakan, pilih username lain.');
+                return;
+            }
 
             masterAlumni.terdaftar = true;
-            daftarAkun.push({
+            const akunAlumni = {
                 id: Date.now(),
                 username: username,
                 email: `${username}@alumni.smk.sch.id`,
@@ -912,7 +1038,9 @@
                 status: 'aktif',
                 name: `${masterAlumni.nama} (Alumni)`,
                 jurusan: masterAlumni.jurusan
-            });
+            };
+            daftarAkun.push(akunAlumni);
+            catatLog('Registrasi Akun', `Aktivasi akun alumni (NISN ${nisn})`, akunAlumni);
 
             bootstrap.Modal.getInstance(document.getElementById('modalAktivasiAlumni')).hide();
             $('#form-aktivasi-alumni')[0].reset();
@@ -921,13 +1049,16 @@
 
         $('#btn-logout').on('click', function(e) {
             e.preventDefault();
+            if (currentUser) catatLog('Logout', `Logout dari sistem sebagai ${ROLE_LABEL[currentUser.role]}`);
             currentUser = null;
+            try { sessionStorage.removeItem(SESSION_KEY); } catch (err) {}
             $('#form-login')[0].reset();
             if (window.history && window.history.replaceState) {
                 const url = new URL(window.location);
                 url.search = '';
                 window.history.replaceState({}, '', url);
             }
+            $('#content-area').empty();
             $('#app-wrapper').fadeOut(150, function() {
                 $('#login-page').css('display', 'flex').hide().fadeIn(200);
             });
@@ -949,7 +1080,12 @@
 
         $(document).on('click', '.menu-item', function(e) {
             e.preventDefault();
+            if (!currentUser) return;
             const target = $(this).data('page');
+            if (!halamanBolehDiakses(currentUser.role, target)) {
+                showNotifToast('Akses ditolak: halaman tersebut bukan hak akses role Anda.', 'danger');
+                return;
+            }
             $('.menu-item').removeClass('active');
             $(`.menu-item[data-page="${target}"]`).addClass('active');
             $('#sidebar').removeClass('mobile-open');
@@ -961,25 +1097,51 @@
         // RENDER HALAMAN DINAMIS
         // =====================================================================
         function showNotifToast(msg, type = 'success') {
+            const icon = (type === 'danger' || type === 'warning') ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill';
             const alertHtml = `
                 <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
-                    <i class="bi bi-check-circle-fill me-2"></i>${msg}
+                    <i class="bi ${icon} me-2"></i>${msg}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             `;
             $('#content-area').prepend(alertHtml);
         }
 
+        function statusBadgeClass(s) {
+            return s === 'Diterima' ? 'bg-success' : (s === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark');
+        }
+
+        function penilaianSiswaIni() {
+            return dataPenilaian.find(p => p.siswa === currentUser.name) || null;
+        }
+
         function loadPage(page, instant = false) {
+            if (!currentUser) return;
+
+            // Pemeriksaan hak akses di sisi render: role tidak boleh membuka halaman role lain
+            let ditolak = false;
+            if (!halamanBolehDiakses(currentUser.role, page)) {
+                ditolak = true;
+                page = menusByRole[currentUser.role][0].id;
+                $('.menu-item').removeClass('active');
+                $(`.menu-item[data-page="${page}"]`).addClass('active');
+                syncUrlParam(currentUser.role, page);
+            }
+
             let html = '';
+            let afterRender = null;
 
             // 1. DASHBOARD SISWA
             if (page === 'dashboard-siswa') {
                 $('#page-title').text('Dashboard Siswa');
+                const ajuanSaya = dataPengajuan.filter(p => p.siswa === currentUser.name);
+                const statusPKL = ajuanSaya.some(p => p.status === 'Diterima') ? 'Diterima' : (ajuanSaya.length ? ajuanSaya[ajuanSaya.length - 1].status : 'Belum Mengajukan');
+                const monSaya = dataMonitoring.filter(m => m.siswa === currentUser.name);
+                const nilaiSaya = penilaianSiswaIni();
                 html = `
                     <div class="alert text-white border-0 shadow-sm mb-4" style="background: linear-gradient(90deg, var(--navy-primary), var(--navy-light));">
-                        <h5 class="fw-bold mb-1">Selamat Datang, ${currentUser.name}!</h5>
-                        <p class="mb-0 small opacity-75">NISN: ${currentUser.nis_nip} | Jurusan: ${currentUser.jurusan}</p>
+                        <h5 class="fw-bold mb-1">Selamat Datang, ${esc(currentUser.name)}!</h5>
+                        <p class="mb-0 small opacity-75">NISN: ${esc(currentUser.nis_nip)} | Jurusan: ${esc(currentUser.jurusan)}</p>
                     </div>
                     <div class="row g-3 mb-4">
                         <div class="col-md-3 col-6">
@@ -998,7 +1160,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <div class="text-muted small">Status PKL</div>
-                                        <h6 class="fw-bold text-success mb-0">Diterima</h6>
+                                        <h6 class="fw-bold ${statusPKL === 'Diterima' ? 'text-success' : 'text-warning'} mb-0">${statusPKL}</h6>
                                     </div>
                                     <div class="icon-box text-success"><i class="bi bi-check-circle"></i></div>
                                 </div>
@@ -1009,7 +1171,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <div class="text-muted small">Laporan Monitoring</div>
-                                        <h4 class="fw-bold mb-0">${dataMonitoring.length}</h4>
+                                        <h4 class="fw-bold mb-0">${monSaya.length}</h4>
                                     </div>
                                     <div class="icon-box text-primary"><i class="bi bi-journal-check"></i></div>
                                 </div>
@@ -1020,7 +1182,7 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <div class="text-muted small">Nilai Akhir</div>
-                                        <h4 class="fw-bold mb-0">${dataPenilaian[0].akhir}</h4>
+                                        <h4 class="fw-bold mb-0">${nilaiSaya ? nilaiSaya.akhir : '-'}</h4>
                                     </div>
                                     <div class="icon-box text-warning"><i class="bi bi-award"></i></div>
                                 </div>
@@ -1032,12 +1194,12 @@
                         ${dataPengalaman.map(p => `
                             <div class="p-3 bg-light rounded border-start border-4 border-primary mb-2">
                                 <div class="d-flex justify-content-between">
-                                    <strong class="text-primary">${p.judul}</strong>
-                                    <span class="badge bg-secondary">${p.tempat}</span>
+                                    <strong class="text-primary">${esc(p.judul)}</strong>
+                                    <span class="badge bg-secondary">${esc(p.tempat)}</span>
                                 </div>
-                                <small class="text-muted d-block mb-2">Oleh: ${p.alumni}</small>
-                                <p class="small mb-1"><b>Kegiatan:</b> ${p.kegiatan}</p>
-                                <p class="small mb-0 text-success"><b>Tips Alumni:</b> "${p.tips}"</p>
+                                <small class="text-muted d-block mb-2">Oleh: ${esc(p.alumni)}</small>
+                                <p class="small mb-1"><b>Kegiatan:</b> ${esc(p.kegiatan)}</p>
+                                <p class="small mb-0 text-success"><b>Tips Alumni:</b> "${esc(p.tips)}"</p>
                             </div>
                         `).join('')}
                     </div>
@@ -1046,7 +1208,7 @@
 
             // 2. DAFTAR & FILTER TEMPAT PKL
             else if (page === 'daftar-tempat') {
-                $('#page-title').text('Daftar Tempat PKL');
+                $('#page-title').text(currentUser.role === 'alumni' ? 'Informasi Tempat PKL' : 'Daftar Tempat PKL');
                 html = `
                     <div class="card table-card p-4">
                         <div class="row g-2 mb-3">
@@ -1068,12 +1230,10 @@
                         <div class="row g-3" id="list-tempat-container"></div>
                     </div>
                 `;
-                $('#content-area').html(html);
-                renderKartuTempat();
-                return;
+                afterRender = renderKartuTempat;
             }
 
-           // 3. FORM PENGAJUAN PKL
+            // 3. FORM PENGAJUAN PKL
             else if (page === 'form-pengajuan') {
                 $('#page-title').text('Form Pengajuan Tempat PKL');
                 const jumlahAjuan = dataPengajuan.filter(p => p.siswa === currentUser.name).length;
@@ -1089,7 +1249,7 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Pilih Tempat PKL</label>
                                 <select id="pilih-tempat-ajukan" class="form-select" ${sisaAjuan === 0 ? 'disabled' : ''} required>
-                                    ${dataTempatPKL.map(t => `<option value="${t.nama}">${t.nama} - ${t.lokasi} (Kuota: ${t.kuota})</option>`).join('')}
+                                    ${dataTempatPKL.map(t => `<option value="${esc(t.nama)}">${esc(t.nama)} - ${esc(t.lokasi)} (Kuota: ${t.kuota})</option>`).join('')}
                                 </select>
                             </div>
                             <div class="row">
@@ -1135,17 +1295,14 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${daftarMilikSiswa.map((p, i) => {
-                                        let badge = p.status === 'Diterima' ? 'bg-success' : (p.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark');
-                                        return `
-                                            <tr>
-                                                <td>${i + 1}</td>
-                                                <td class="fw-semibold">${p.tempat}</td>
-                                                <td>${p.tanggal}</td>
-                                                <td><span class="badge ${badge}">${p.status}</span></td>
-                                            </tr>
-                                        `;
-                                    }).join('')}
+                                    ${daftarMilikSiswa.length ? daftarMilikSiswa.map((p, i) => `
+                                        <tr>
+                                            <td>${i + 1}</td>
+                                            <td class="fw-semibold">${esc(p.tempat)}</td>
+                                            <td>${p.tanggal}</td>
+                                            <td><span class="badge ${statusBadgeClass(p.status)}">${p.status}</span></td>
+                                        </tr>
+                                    `).join('') : '<tr><td colspan="4" class="text-center text-muted py-3">Belum ada pengajuan.</td></tr>'}
                                 </tbody>
                             </table>
                         </div>
@@ -1153,15 +1310,16 @@
                 `;
             }
 
-            // 5. MONITORING SISWA
+            // 5. MONITORING SISWA (hanya melihat laporan miliknya)
             else if (page === 'monitoring-siswa') {
                 $('#page-title').text('Monitoring Kegiatan PKL');
+                const monSaya = dataMonitoring.filter(m => m.siswa === currentUser.name);
                 html = `
                     <div class="card table-card p-4 mb-4">
                         <h6 class="fw-bold mb-3">Tambah Laporan Kegiatan Harian / Mingguan</h6>
                         <form id="form-tambah-monitoring" class="row g-2">
                             <div class="col-md-3">
-                                <input type="date" id="mon-tgl" class="form-control" value="2026-11-13" required>
+                                <input type="date" id="mon-tgl" class="form-control" value="${hariIniWIB()}" required>
                             </div>
                             <div class="col-md-4">
                                 <input type="text" id="mon-kegiatan" class="form-control" placeholder="Judul kegiatan..." required>
@@ -1183,23 +1341,23 @@
                                         <th>Kegiatan</th>
                                         <th>Perkembangan</th>
                                         <th>Status</th>
-                                        <th>Catatan Guru</th>
+                                        <th>Catatan Pembimbing</th>
                                         <th>Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    ${dataMonitoring.map(m => `
+                                    ${monSaya.length ? monSaya.map(m => `
                                         <tr>
                                             <td>${m.tanggal}</td>
-                                            <td class="fw-semibold">${m.kegiatan}</td>
-                                            <td>${m.perkembangan}</td>
+                                            <td class="fw-semibold">${esc(m.kegiatan)}</td>
+                                            <td>${esc(m.perkembangan)}</td>
                                             <td><span class="badge ${m.status === 'Disetujui' ? 'bg-success' : 'bg-warning text-dark'}">${m.status}</span></td>
-                                            <td><span class="text-muted small">${m.catatan || '-'}</span></td>
+                                            <td><span class="text-muted small">${esc(m.catatan || '-')}</span></td>
                                             <td>
                                                 ${m.status !== 'Disetujui' ? `<button class="btn btn-sm btn-outline-danger hapus-monitoring" data-id="${m.id}"><i class="bi bi-trash"></i></button>` : '<span class="text-muted small">Terkunci</span>'}
                                             </td>
                                         </tr>
-                                    `).join('')}
+                                    `).join('') : '<tr><td colspan="6" class="text-center text-muted py-3">Belum ada laporan monitoring.</td></tr>'}
                                 </tbody>
                             </table>
                         </div>
@@ -1207,30 +1365,34 @@
                 `;
             }
 
-            // 6. HASIL PENILAIAN SISWA
+            // 6. HASIL PENILAIAN SISWA (hanya nilai miliknya)
             else if (page === 'hasil-penilaian') {
                 $('#page-title').text('Hasil Penilaian PKL');
-                const n = dataPenilaian[0];
-                html = `
+                const n = penilaianSiswaIni();
+                html = n ? `
                     <div class="card table-card p-4" style="max-width: 700px;">
                         <h6 class="fw-bold mb-3">Transkrip Nilai Praktik Kerja Lapangan</h6>
                         <table class="table table-bordered">
-                            <tr><th class="bg-light w-50">Nama Siswa</th><td>${n.siswa}</td></tr>
+                            <tr><th class="bg-light w-50">Nama Siswa</th><td>${esc(n.siswa)}</td></tr>
                             <tr><th class="bg-light">Kedisiplinan (20%)</th><td>${n.disiplin}</td></tr>
                             <tr><th class="bg-light">Tanggung Jawab (20%)</th><td>${n.tanggung_jawab}</td></tr>
                             <tr><th class="bg-light">Keterampilan Kerja (30%)</th><td>${n.keterampilan}</td></tr>
                             <tr><th class="bg-light">Kerja Sama (15%)</th><td>${n.kerja_sama}</td></tr>
                             <tr><th class="bg-light">Sikap & Etika (15%)</th><td>${n.sikap}</td></tr>
                             <tr><th class="bg-light">Nilai Akhir (Terbobot)</th><td class="fw-bold text-primary fs-5">${n.akhir}</td></tr>
-                            <tr><th class="bg-light">Catatan Guru Pembimbing</th><td>${n.catatan}</td></tr>
+                            <tr><th class="bg-light">Catatan Pembimbing</th><td>${esc(n.catatan)}</td></tr>
                         </table>
+                    </div>
+                ` : `
+                    <div class="card table-card p-4" style="max-width: 700px;">
+                        <p class="text-muted mb-0">Nilai PKL Anda belum diinput oleh Admin/Guru Pembimbing.</p>
                     </div>
                 `;
             }
 
-            // 7. DASHBOARD ADMIN & DASHBOARD GURU
-            else if (page === 'dashboard-admin' || page === 'dashboard-guru') {
-                $('#page-title').text(page === 'dashboard-admin' ? 'Dashboard Admin Sistem' : 'Dashboard Guru Pembimbing');
+            // 7. DASHBOARD ADMIN/GURU PEMBIMBING (SATU DASHBOARD)
+            else if (page === 'dashboard-admin') {
+                $('#page-title').text('Dashboard Admin/Guru Pembimbing');
                 html = `
                     <div class="row g-3 mb-4">
                         <div class="col-md-3 col-6">
@@ -1274,10 +1436,10 @@
                                 <tbody>
                                     ${dataPengajuan.map(p => `
                                         <tr>
-                                            <td>${p.siswa}</td>
-                                            <td>${p.tempat}</td>
+                                            <td>${esc(p.siswa)}</td>
+                                            <td>${esc(p.tempat)}</td>
                                             <td>${p.tanggal}</td>
-                                            <td><span class="badge ${p.status === 'Diterima' ? 'bg-success' : (p.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark')}">${p.status}</span></td>
+                                            <td><span class="badge ${statusBadgeClass(p.status)}">${p.status}</span></td>
                                         </tr>
                                     `).join('')}
                                 </tbody>
@@ -1287,7 +1449,7 @@
                 `;
             }
 
-            // 8. MANAJEMEN AKUN & MASTER NISN/NIP (KHUSUS ADMIN)
+            // 8. MANAJEMEN AKUN & MASTER NISN/NIP
             else if (page === 'kelola-akun') {
                 $('#page-title').text('Manajemen Akun & Data NISN / NIP');
                 html = `
@@ -1315,13 +1477,13 @@
                                 <tbody>
                                     ${daftarAkun.map(a => `
                                         <tr>
-                                            <td class="fw-semibold">${a.username}</td>
-                                            <td><code>${a.nis_nip}</code></td>
-                                            <td>${a.name}</td>
-                                            <td><span class="badge bg-primary text-uppercase">${a.role}</span></td>
+                                            <td class="fw-semibold">${esc(a.username)}</td>
+                                            <td><code>${esc(a.nis_nip)}</code></td>
+                                            <td>${esc(a.name)}</td>
+                                            <td><span class="badge bg-primary">${ROLE_LABEL[a.role]}</span></td>
                                             <td><span class="badge ${a.status === 'aktif' ? 'bg-success' : 'bg-secondary'}">${a.status}</span></td>
                                             <td>
-                                                ${a.role !== 'admin' ? `<button class="btn btn-sm btn-outline-warning toggle-status-akun" data-id="${a.id}">${a.status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan'}</button>` : '-'}
+                                                ${a.id !== currentUser.id ? `<button class="btn btn-sm btn-outline-warning toggle-status-akun" data-id="${a.id}">${a.status === 'aktif' ? 'Nonaktifkan' : 'Aktifkan'}</button>` : '<span class="text-muted small">Akun Anda</span>'}
                                             </td>
                                         </tr>
                                     `).join('')}
@@ -1332,7 +1494,7 @@
                 `;
             }
 
-            // 9. MANAJEMEN TEMPAT PKL (ADMIN)
+            // 9. MANAJEMEN TEMPAT PKL
             else if (page === 'kelola-tempat') {
                 $('#page-title').text('Manajemen Data Tempat PKL');
                 html = `
@@ -1357,9 +1519,9 @@
                                     ${dataTempatPKL.map((t, i) => `
                                         <tr>
                                             <td>${i + 1}</td>
-                                            <td class="fw-semibold">${t.nama}</td>
-                                            <td>${t.lokasi}</td>
-                                            <td><span class="badge bg-light text-dark border">${t.jurusan}</span></td>
+                                            <td class="fw-semibold">${esc(t.nama)}</td>
+                                            <td>${esc(t.lokasi)}</td>
+                                            <td><span class="badge bg-light text-dark border">${esc(t.jurusan)}</span></td>
                                             <td>${t.kuota} Siswa</td>
                                             <td>
                                                 <button class="btn btn-sm btn-warning edit-tempat" data-id="${t.id}"><i class="bi bi-pencil"></i></button>
@@ -1393,10 +1555,10 @@
                                 <tbody>
                                     ${dataPengajuan.map(p => `
                                         <tr>
-                                            <td class="fw-semibold">${p.siswa}</td>
-                                            <td>${p.tempat}</td>
+                                            <td class="fw-semibold">${esc(p.siswa)}</td>
+                                            <td>${esc(p.tempat)}</td>
                                             <td>${p.tanggal}</td>
-                                            <td><span class="badge ${p.status === 'Diterima' ? 'bg-success' : (p.status === 'Ditolak' ? 'bg-danger' : 'bg-warning text-dark')}">${p.status}</span></td>
+                                            <td><span class="badge ${statusBadgeClass(p.status)}">${p.status}</span></td>
                                             <td>
                                                 <button class="btn btn-sm btn-success ubah-status" data-id="${p.id}" data-status="Diterima"><i class="bi bi-check-lg"></i> Terima</button>
                                                 <button class="btn btn-sm btn-danger ubah-status" data-id="${p.id}" data-status="Ditolak"><i class="bi bi-x-lg"></i> Tolak</button>
@@ -1410,25 +1572,27 @@
                 `;
             }
 
-            // 11. MONITORING & PENILAIAN (GURU & ADMIN)
+            // 11. MONITORING & PENILAIAN
             else if (page === 'monitoring-admin') {
                 $('#page-title').text('Monitoring & Penilaian PKL Siswa');
+                const nilai0 = dataPenilaian[0];
                 html = `
                     <div class="card table-card p-4 mb-4">
                         <h6 class="fw-bold mb-3">Laporan Monitoring Kegiatan Siswa</h6>
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle">
-                                <thead><tr><th>Siswa</th><th>Tanggal</th><th>Kegiatan</th><th>Perkembangan</th><th>Status</th><th>Aksi</th></tr></thead>
+                                <thead><tr><th>Siswa</th><th>Tanggal</th><th>Kegiatan</th><th>Perkembangan</th><th>Status</th><th>Catatan</th><th>Aksi</th></tr></thead>
                                 <tbody>
                                     ${dataMonitoring.map(m => `
                                         <tr>
-                                            <td class="fw-semibold">${m.siswa}</td>
+                                            <td class="fw-semibold">${esc(m.siswa)}</td>
                                             <td>${m.tanggal}</td>
-                                            <td>${m.kegiatan}</td>
-                                            <td>${m.perkembangan}</td>
+                                            <td>${esc(m.kegiatan)}</td>
+                                            <td>${esc(m.perkembangan)}</td>
                                             <td><span class="badge ${m.status === 'Disetujui' ? 'bg-success' : 'bg-warning text-dark'}">${m.status}</span></td>
+                                            <td class="small text-muted">${esc(m.catatan || '-')}</td>
                                             <td>
-                                                <button class="btn btn-sm btn-success setujui-monitoring" data-id="${m.id}">Setujui</button>
+                                                <button class="btn btn-sm btn-success setujui-monitoring" data-id="${m.id}">${m.status === 'Disetujui' ? 'Ubah Catatan' : 'Setujui'}</button>
                                             </td>
                                         </tr>
                                     `).join('')}
@@ -1446,28 +1610,28 @@
                             <div class="row">
                                 <div class="col-md-4 mb-2">
                                     <label class="form-label small fw-semibold">Kedisiplinan (20%)</label>
-                                    <input type="number" id="n-disiplin" class="form-control" value="${dataPenilaian[0].disiplin}" min="0" max="100" required>
+                                    <input type="number" id="n-disiplin" class="form-control" value="${nilai0.disiplin}" min="0" max="100" required>
                                 </div>
                                 <div class="col-md-4 mb-2">
                                     <label class="form-label small fw-semibold">Tanggung Jawab (20%)</label>
-                                    <input type="number" id="n-tanggung" class="form-control" value="${dataPenilaian[0].tanggung_jawab}" min="0" max="100" required>
+                                    <input type="number" id="n-tanggung" class="form-control" value="${nilai0.tanggung_jawab}" min="0" max="100" required>
                                 </div>
                                 <div class="col-md-4 mb-2">
                                     <label class="form-label small fw-semibold">Keterampilan (30%)</label>
-                                    <input type="number" id="n-keterampilan" class="form-control" value="${dataPenilaian[0].keterampilan}" min="0" max="100" required>
+                                    <input type="number" id="n-keterampilan" class="form-control" value="${nilai0.keterampilan}" min="0" max="100" required>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <label class="form-label small fw-semibold">Kerja Sama (15%)</label>
-                                    <input type="number" id="n-kerjasama" class="form-control" value="${dataPenilaian[0].kerja_sama}" min="0" max="100" required>
+                                    <input type="number" id="n-kerjasama" class="form-control" value="${nilai0.kerja_sama}" min="0" max="100" required>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <label class="form-label small fw-semibold">Sikap & Etika (15%)</label>
-                                    <input type="number" id="n-sikap" class="form-control" value="${dataPenilaian[0].sikap}" min="0" max="100" required>
+                                    <input type="number" id="n-sikap" class="form-control" value="${nilai0.sikap}" min="0" max="100" required>
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Catatan Evaluasi</label>
-                                <textarea id="n-catatan" class="form-control" rows="2">${dataPenilaian[0].catatan}</textarea>
+                                <textarea id="n-catatan" class="form-control" rows="2">${esc(nilai0.catatan)}</textarea>
                             </div>
                             <button type="submit" class="btn btn-navy"><i class="bi bi-save me-1"></i>Simpan Penilaian</button>
                         </form>
@@ -1475,21 +1639,47 @@
                 `;
             }
 
-            // 12. LOG AKTIVITAS (ADMIN)
+            // 12. RIWAYAT AKTIVITAS (LOG AKTIVITAS) - HANYA ADMIN/GURU PEMBIMBING
             else if (page === 'log-aktivitas') {
-                $('#page-title').text('Log Aktivitas Pengguna');
+                $('#page-title').text('Riwayat Aktivitas');
                 html = `
                     <div class="card table-card p-4">
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <input type="text" id="flt-log-nama" class="form-control" placeholder="Cari nama pengguna / username...">
+                            </div>
+                            <div class="col-md-3">
+                                <select id="flt-log-jenis" class="form-select">
+                                    <option value="">Semua Aktivitas</option>
+                                    ${LOG_JENIS.map(j => `<option value="${esc(j)}">${esc(j)}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="date" id="flt-log-tgl" class="form-control" title="Filter tanggal (WIB)">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-navy w-100" id="btn-reset-log"><i class="bi bi-arrow-clockwise me-1"></i>Reset</button>
+                            </div>
+                        </div>
+                        <div class="small text-muted mb-2" id="log-info"></div>
                         <div class="table-responsive">
-                            <table class="table table-sm table-striped align-middle">
-                                <thead><tr><th>Waktu</th><th>Pengguna</th><th>Aktivitas</th></tr></thead>
-                                <tbody>
-                                    ${logAktivitas.map(l => `<tr><td>${l.waktu}</td><td class="fw-semibold">${l.user}</td><td>${l.aktivitas}</td></tr>`).join('')}
-                                </tbody>
+                            <table class="table table-hover table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50px;">No</th>
+                                        <th>Waktu</th>
+                                        <th>Pengguna</th>
+                                        <th>Role</th>
+                                        <th>Aktivitas</th>
+                                        <th>Keterangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="log-tbody"></tbody>
                             </table>
                         </div>
                     </div>
                 `;
+                afterRender = renderTabelLog;
             }
 
             // 13. DASHBOARD ALUMNI
@@ -1497,8 +1687,8 @@
                 $('#page-title').text('Dashboard Alumni');
                 html = `
                     <div class="alert text-white border-0 shadow-sm mb-4" style="background: linear-gradient(90deg, var(--navy-primary), var(--navy-light));">
-                        <h5 class="fw-bold mb-1">Halo, ${currentUser.name}!</h5>
-                        <p class="mb-0 small opacity-75">NISN: ${currentUser.nis_nip} | Bagikan pengalaman PKL serta ulasan dan rating untuk membantu adik kelas.</p>
+                        <h5 class="fw-bold mb-1">Halo, ${esc(currentUser.name)}!</h5>
+                        <p class="mb-0 small opacity-75">NISN: ${esc(currentUser.nis_nip)} | Bagikan pengalaman PKL serta ulasan dan rating untuk membantu adik kelas.</p>
                     </div>
                     <div class="row g-3">
                         <div class="col-md-6">
@@ -1532,7 +1722,7 @@
                                 <div class="col-md-6 mb-2">
                                     <label class="form-label small fw-semibold">Tempat PKL</label>
                                     <select id="exp-tempat" class="form-select">
-                                        ${dataTempatPKL.map(t => `<option value="${t.nama}">${t.nama}</option>`).join('')}
+                                        ${dataTempatPKL.map(t => `<option value="${esc(t.nama)}">${esc(t.nama)}</option>`).join('')}
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-2">
@@ -1574,7 +1764,7 @@
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Pilih Tempat PKL</label>
                                 <select id="ulasan-tempat" class="form-select">
-                                    ${dataTempatPKL.map(t => `<option value="${t.id}">${t.nama}</option>`).join('')}
+                                    ${dataTempatPKL.map(t => `<option value="${t.id}">${esc(t.nama)}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -1600,11 +1790,11 @@
                         ${dataUlasan.map(u => `
                             <div class="border-bottom pb-2 mb-2">
                                 <div class="d-flex justify-content-between">
-                                    <strong>${u.tempat}</strong>
+                                    <strong>${esc(u.tempat)}</strong>
                                     <span class="text-warning">${'★'.repeat(u.rating)}</span>
                                 </div>
-                                <small class="text-muted">${u.alumni} • ${u.tanggal}</small>
-                                <p class="small mb-0 mt-1">${u.komentar}</p>
+                                <small class="text-muted">${esc(u.alumni)} • ${u.tanggal}</small>
+                                <p class="small mb-0 mt-1">${esc(u.komentar)}</p>
                             </div>
                         `).join('')}
                     </div>
@@ -1619,23 +1809,23 @@
                         <div class="d-flex align-items-center gap-3 mb-4">
                             <div class="icon-box fs-2" style="width: 64px; height: 64px;"><i class="bi bi-person-fill"></i></div>
                             <div>
-                                <h5 class="fw-bold mb-0">${currentUser.name}</h5>
-                                <span class="badge bg-primary text-uppercase">${currentUser.role}</span>
+                                <h5 class="fw-bold mb-0">${esc(currentUser.name)}</h5>
+                                <span class="badge bg-primary">${ROLE_LABEL[currentUser.role]}</span>
                             </div>
                         </div>
                         <form id="form-profil">
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Nama Lengkap</label>
-                                <input type="text" class="form-control" value="${currentUser.name}" readonly>
+                                <input type="text" class="form-control" value="${esc(currentUser.name)}" readonly>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label small fw-semibold">NISN / NIP</label>
-                                    <input type="text" class="form-control" value="${currentUser.nis_nip}" readonly>
+                                    <input type="text" class="form-control" value="${esc(currentUser.nis_nip)}" readonly>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label small fw-semibold">Username</label>
-                                    <input type="text" class="form-control" value="${currentUser.username}" readonly>
+                                    <input type="text" class="form-control" value="${esc(currentUser.username)}" readonly>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -1653,7 +1843,52 @@
             } else {
                 $('#content-area').hide().html(html).fadeIn(150);
             }
+            if (afterRender) afterRender();
+            if (ditolak) showNotifToast('Akses ditolak: halaman tersebut bukan hak akses role Anda. Anda diarahkan ke dashboard.', 'danger');
         }
+
+        // =====================================================================
+        // TABEL RIWAYAT AKTIVITAS (FILTER: NAMA, JENIS AKTIVITAS, TANGGAL)
+        // =====================================================================
+        function renderTabelLog() {
+            if (!currentUser || currentUser.role !== 'admin') return;
+            const kw = ($('#flt-log-nama').val() || '').trim().toLowerCase();
+            const jenis = $('#flt-log-jenis').val() || '';
+            const tgl = $('#flt-log-tgl').val() || '';
+
+            // Urutkan terbaru di paling atas
+            const urut = [...logAktivitas].sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+            const hasil = urut.filter(l => {
+                const cocokNama = !kw || l.nama.toLowerCase().includes(kw) || l.username.toLowerCase().includes(kw);
+                const cocokJenis = !jenis || l.jenis === jenis;
+                const cocokTgl = !tgl || tanggalWIB(l.waktu) === tgl;
+                return cocokNama && cocokJenis && cocokTgl;
+            });
+
+            const roleBadge = { admin: 'bg-primary', siswa: 'bg-info text-dark', alumni: 'bg-success' };
+            const rows = hasil.map((l, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td class="small text-nowrap">${esc(formatWIB(l.waktu))}</td>
+                    <td><div class="fw-semibold">${esc(l.nama)}</div><small class="text-muted">@${esc(l.username)}</small></td>
+                    <td><span class="badge ${roleBadge[l.role] || 'bg-secondary'}">${esc(ROLE_LABEL[l.role] || l.role)}</span></td>
+                    <td><span class="badge bg-light text-dark border">${esc(l.jenis)}</span></td>
+                    <td class="small">${esc(l.keterangan)}</td>
+                </tr>
+            `).join('');
+
+            $('#log-tbody').html(rows || '<tr><td colspan="6" class="text-center text-muted py-4">Tidak ada aktivitas yang sesuai.</td></tr>');
+            $('#log-info').text(`Menampilkan ${hasil.length} dari ${logAktivitas.length} aktivitas (urut terbaru, zona waktu WIB).`);
+        }
+
+        $(document).on('input', '#flt-log-nama', renderTabelLog);
+        $(document).on('change', '#flt-log-jenis, #flt-log-tgl', renderTabelLog);
+        $(document).on('click', '#btn-reset-log', function() {
+            $('#flt-log-nama').val('');
+            $('#flt-log-jenis').val('');
+            $('#flt-log-tgl').val('');
+            renderTabelLog();
+        });
 
         // =====================================================================
         // INTERAKSI & EVENT HANDLER JQUERY
@@ -1675,12 +1910,12 @@
                         <div class="card h-100 border shadow-sm">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="badge bg-primary-subtle text-primary">${t.jurusan}</span>
+                                    <span class="badge bg-primary-subtle text-primary">${esc(t.jurusan)}</span>
                                     <span class="text-warning fw-bold small"><i class="bi bi-star-fill"></i> ${t.rating}</span>
                                 </div>
-                                <h6 class="fw-bold">${t.nama}</h6>
-                                <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>${t.lokasi}</p>
-                                <p class="small mb-3">${t.bidang}</p>
+                                <h6 class="fw-bold">${esc(t.nama)}</h6>
+                                <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>${esc(t.lokasi)}</p>
+                                <p class="small mb-3">${esc(t.bidang)}</p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="small fw-semibold text-success">Kuota: ${t.kuota}</span>
                                     <button class="btn btn-sm btn-navy lihat-detail" data-id="${t.id}">Detail Tempat</button>
@@ -1699,20 +1934,20 @@
 
             $('#detail-nama').text(t.nama);
             $('#detail-body').html(`
-                <p class="mb-1"><b>Lokasi:</b> ${t.alamat}</p>
-                <p class="mb-1"><b>Bidang Kegiatan:</b> ${t.bidang}</p>
-                <p class="mb-1"><b>Jurusan Relevan:</b> ${t.jurusan}</p>
+                <p class="mb-1"><b>Lokasi:</b> ${esc(t.alamat)}</p>
+                <p class="mb-1"><b>Bidang Kegiatan:</b> ${esc(t.bidang)}</p>
+                <p class="mb-1"><b>Jurusan Relevan:</b> ${esc(t.jurusan)}</p>
                 <p class="mb-1"><b>Kuota Tersedia:</b> ${t.kuota} Siswa</p>
-                <p class="mb-3"><b>Persyaratan:</b> ${t.persyaratan}</p>
+                <p class="mb-3"><b>Persyaratan:</b> ${esc(t.persyaratan)}</p>
                 <hr>
                 <h6 class="fw-bold">Ulasan & Rating Alumni</h6>
                 ${ulasanTempat.length ? ulasanTempat.map(u => `
                     <div class="bg-light p-2 rounded mb-2">
                         <div class="d-flex justify-content-between small fw-bold">
-                            <span>${u.alumni}</span>
+                            <span>${esc(u.alumni)}</span>
                             <span class="text-warning">${'★'.repeat(u.rating)}</span>
                         </div>
-                        <p class="small mb-0">${u.komentar}</p>
+                        <p class="small mb-0">${esc(u.komentar)}</p>
                     </div>
                 `).join('') : '<p class="small text-muted">Belum ada ulasan untuk tempat ini.</p>'}
             `);
@@ -1731,50 +1966,55 @@
             new bootstrap.Modal('#modalDetailTempat').show();
         });
 
-        // Admin Tambah NISN Master
+        // ---------- ADMIN/GURU PEMBIMBING: Tambah NISN Master ----------
         $(document).on('submit', '#form-tambah-nisn', function(e) {
             e.preventDefault();
+            if (!izin('admin')) return;
             const nisn = $('#new-nisn').val().trim();
             if (masterDataSekolah.some(s => s.nisn === nisn)) {
                 showNotifToast('NISN sudah terdaftar di database sekolah!', 'danger');
                 return;
             }
+            const nama = $('#new-nama-siswa').val().trim();
             masterDataSekolah.push({
                 nisn: nisn,
-                nama: $('#new-nama-siswa').val().trim(),
+                nama: nama,
                 kelas: $('#new-kelas-siswa').val().trim(),
                 jurusan: $('#new-jurusan-siswa').val(),
                 status_lulus: false,
                 terdaftar: false
             });
-            logAktivitas.unshift({ waktu: 'Baru saja', user: currentUser.username, aktivitas: `Menambahkan master NISN ${nisn}` });
+            catatLog('Data Akun/NISN', `Menambahkan data master NISN ${nisn} (${nama})`);
             $('#form-tambah-nisn')[0].reset();
             showNotifToast(`Data NISN ${nisn} berhasil ditambahkan ke database sekolah.`);
         });
 
-        // Admin Aktif/Nonaktif Akun
+        // ---------- ADMIN/GURU PEMBIMBING: Aktif/Nonaktif Akun ----------
         $(document).on('click', '.toggle-status-akun', function() {
+            if (!izin('admin')) return;
             const id = $(this).data('id');
             const idx = daftarAkun.findIndex(a => a.id === id);
+            if (idx < 0 || daftarAkun[idx].id === currentUser.id) return;
             daftarAkun[idx].status = daftarAkun[idx].status === 'aktif' ? 'nonaktif' : 'aktif';
+            catatLog('Data Akun/NISN', `Mengubah status akun ${daftarAkun[idx].username} menjadi ${daftarAkun[idx].status}`);
             loadPage('kelola-akun');
             showNotifToast('Status akun pengguna berhasil diperbarui.');
         });
-// Submit Pengajuan Siswa (Maksimal 2 tempat PKL per siswa & tidak boleh duplikat)
+
+        // ---------- SISWA: Submit Pengajuan (maks. 2 tempat & tidak boleh duplikat) ----------
         $(document).on('submit', '#submit-pengajuan', function(e) {
             e.preventDefault();
+            if (!izin('siswa')) return;
             const tempatDipilih = $('#pilih-tempat-ajukan').val();
             const pengajuanSiswa = dataPengajuan.filter(p => p.siswa === currentUser.name);
 
-            // Cek batas maksimal 2 pengajuan
             if (pengajuanSiswa.length >= 2) {
                 showNotifToast('Batas pengajuan tercapai! Setiap siswa hanya dapat mengajukan maksimal 2 tempat PKL.', 'danger');
                 return;
             }
 
-            // Cek agar tidak mengajukan tempat yang sama dua kali
             if (pengajuanSiswa.some(p => p.tempat === tempatDipilih)) {
-                showNotifToast(`Anda sudah pernah mengajukan PKL di ${tempatDipilih}. Silakan pilih tempat lain.`, 'warning');
+                showNotifToast(`Anda sudah pernah mengajukan PKL di ${esc(tempatDipilih)}. Silakan pilih tempat lain.`, 'warning');
                 return;
             }
 
@@ -1782,49 +2022,69 @@
                 id: Date.now(),
                 siswa: currentUser.name,
                 tempat: tempatDipilih,
-                tanggal: '2026-11-13',
+                tanggal: hariIniWIB(),
                 status: 'Menunggu'
             });
+            catatLog('Pengajuan PKL', `Mengajukan tempat PKL di ${tempatDipilih}`);
             loadPage('status-pengajuan');
             showNotifToast(`Pengajuan tempat PKL berhasil dikirim (${pengajuanSiswa.length + 1}/2 kuota pengajuan).`);
         });
 
-        // CRUD Monitoring Siswa
+        // ---------- SISWA: Monitoring ----------
         $(document).on('submit', '#form-tambah-monitoring', function(e) {
             e.preventDefault();
+            if (!izin('siswa')) return;
+            const kegiatan = $('#mon-kegiatan').val();
             dataMonitoring.push({
                 id: Date.now(),
                 siswa: currentUser.name,
                 tanggal: $('#mon-tgl').val(),
-                kegiatan: $('#mon-kegiatan').val(),
+                kegiatan: kegiatan,
                 perkembangan: $('#mon-perkembangan').val(),
                 status: 'Menunggu Verifikasi',
-                catatan: 'Menunggu tinjauan guru'
+                catatan: 'Menunggu tinjauan pembimbing'
             });
+            catatLog('Monitoring', `Menambahkan laporan monitoring: ${kegiatan}`);
             loadPage('monitoring-siswa');
             showNotifToast('Laporan monitoring kegiatan PKL berhasil ditambahkan.');
         });
 
         $(document).on('click', '.hapus-monitoring', function() {
+            if (!izin('siswa')) return;
             if (confirm('Yakin ingin menghapus catatan monitoring ini?')) {
                 const id = $(this).data('id');
+                const item = dataMonitoring.find(m => m.id === id);
+                // Siswa hanya boleh menghapus laporan miliknya yang belum disetujui
+                if (!item || item.siswa !== currentUser.name || item.status === 'Disetujui') {
+                    showNotifToast('Akses ditolak: laporan ini tidak dapat dihapus.', 'danger');
+                    return;
+                }
                 dataMonitoring = dataMonitoring.filter(m => m.id !== id);
+                catatLog('Monitoring', `Menghapus laporan monitoring: ${item.kegiatan}`);
                 loadPage('monitoring-siswa');
                 showNotifToast('Data monitoring dihapus.', 'warning');
             }
         });
 
+        // ---------- ADMIN/GURU PEMBIMBING: Setujui / beri catatan monitoring ----------
         $(document).on('click', '.setujui-monitoring', function() {
+            if (!izin('admin')) return;
             const id = $(this).data('id');
             const idx = dataMonitoring.findIndex(m => m.id === id);
+            if (idx < 0) return;
+            const cat = prompt('Catatan untuk siswa (opsional):', 'Laporan kegiatan sesuai dan disetujui pembimbing.');
+            if (cat === null) return;
+            const sebelumnya = dataMonitoring[idx].status;
             dataMonitoring[idx].status = 'Disetujui';
-            dataMonitoring[idx].catatan = 'Laporan kegiatan sesuai dan disetujui pembimbing.';
+            dataMonitoring[idx].catatan = cat.trim() || 'Laporan kegiatan disetujui pembimbing.';
+            catatLog('Monitoring', `${sebelumnya === 'Disetujui' ? 'Mengubah catatan' : 'Menyetujui'} monitoring ${dataMonitoring[idx].siswa}: ${dataMonitoring[idx].kegiatan}`);
             loadPage('monitoring-admin');
-            showNotifToast('Laporan monitoring berhasil disetujui.');
+            showNotifToast('Laporan monitoring berhasil diperbarui.');
         });
 
-        // CRUD Tempat PKL (Admin)
+        // ---------- ADMIN/GURU PEMBIMBING: CRUD Tempat PKL ----------
         $(document).on('click', '#btn-tambah-tempat', function() {
+            if (!izin('admin')) return;
             $('#modalTempatTitle').text('Tambah Data Tempat PKL');
             $('#edit-tempat-id').val('');
             $('#form-tempat-pkl')[0].reset();
@@ -1832,7 +2092,9 @@
         });
 
         $(document).on('click', '.edit-tempat', function() {
+            if (!izin('admin')) return;
             const t = dataTempatPKL.find(x => x.id === $(this).data('id'));
+            if (!t) return;
             $('#modalTempatTitle').text('Edit Data Tempat PKL');
             $('#edit-tempat-id').val(t.id);
             $('#input-nama-perusahaan').val(t.nama);
@@ -1846,24 +2108,28 @@
 
         $('#form-tempat-pkl').on('submit', function(e) {
             e.preventDefault();
+            if (!izin('admin')) return;
             const editId = $('#edit-tempat-id').val();
+            const lama = editId ? dataTempatPKL.find(x => x.id === parseInt(editId)) : null;
             const obj = {
                 id: editId ? parseInt(editId) : Date.now(),
                 nama: $('#input-nama-perusahaan').val(),
                 lokasi: $('#input-lokasi').val(),
-                alamat: $('#input-lokasi').val(),
+                alamat: lama ? lama.alamat : $('#input-lokasi').val(),
                 kuota: parseInt($('#input-kuota').val()),
                 jurusan: $('#input-jurusan').val(),
                 bidang: $('#input-bidang').val(),
                 persyaratan: $('#input-syarat').val(),
-                rating: 5.0
+                rating: lama ? lama.rating : 5.0
             };
 
             if (editId) {
                 const idx = dataTempatPKL.findIndex(x => x.id === parseInt(editId));
                 dataTempatPKL[idx] = obj;
+                catatLog('Data Tempat PKL', `Mengubah data tempat PKL: ${obj.nama}`);
             } else {
                 dataTempatPKL.push(obj);
+                catatLog('Data Tempat PKL', `Menambahkan tempat PKL baru: ${obj.nama}`);
             }
             bootstrap.Modal.getInstance(document.getElementById('modalFormTempat')).hide();
             loadPage('kelola-tempat');
@@ -1871,27 +2137,34 @@
         });
 
         $(document).on('click', '.hapus-tempat', function() {
+            if (!izin('admin')) return;
             if (confirm('Apakah Anda yakin ingin menghapus tempat PKL ini?')) {
                 const id = $(this).data('id');
+                const item = dataTempatPKL.find(t => t.id === id);
                 dataTempatPKL = dataTempatPKL.filter(t => t.id !== id);
+                if (item) catatLog('Data Tempat PKL', `Menghapus tempat PKL: ${item.nama}`);
                 loadPage('kelola-tempat');
                 showNotifToast('Data tempat PKL berhasil dihapus.', 'danger');
             }
         });
 
-        // Verifikasi Pengajuan
+        // ---------- ADMIN/GURU PEMBIMBING: Verifikasi Pengajuan ----------
         $(document).on('click', '.ubah-status', function() {
+            if (!izin('admin')) return;
             const id = $(this).data('id');
             const status = $(this).data('status');
             const idx = dataPengajuan.findIndex(p => p.id === id);
+            if (idx < 0) return;
             dataPengajuan[idx].status = status;
+            catatLog('Status Pengajuan', `Mengubah status pengajuan ${dataPengajuan[idx].siswa} di ${dataPengajuan[idx].tempat} menjadi ${status}`);
             loadPage('kelola-pengajuan');
             showNotifToast(`Status pengajuan diperbarui menjadi ${status}.`);
         });
 
-        // Simpan Nilai Terbobot (20%, 20%, 30%, 15%, 15%)
+        // ---------- ADMIN/GURU PEMBIMBING: Simpan Nilai Terbobot (20%, 20%, 30%, 15%, 15%) ----------
         $(document).on('submit', '#form-input-nilai', function(e) {
             e.preventDefault();
+            if (!izin('admin')) return;
             const d = parseFloat($('#n-disiplin').val());
             const tj = parseFloat($('#n-tanggung').val());
             const k = parseFloat($('#n-keterampilan').val());
@@ -1910,23 +2183,27 @@
                 akhir: nilaiAkhir,
                 catatan: $('#n-catatan').val()
             };
-            logAktivitas.unshift({ waktu: 'Baru saja', user: currentUser.username, aktivitas: `Memperbarui nilai akhir Andi Pratama menjadi ${nilaiAkhir}` });
+            catatLog('Penilaian PKL', `Menyimpan penilaian Andi Pratama (nilai akhir ${nilaiAkhir})`);
             showNotifToast(`Nilai PKL siswa berhasil disimpan (Nilai Akhir Terbobot: ${nilaiAkhir}).`);
         });
 
-        // Pengalaman & Ulasan Alumni
+        // ---------- ALUMNI: Pengalaman & Ulasan ----------
         $(document).on('submit', '#submit-pengalaman', function(e) {
             e.preventDefault();
+            if (!izin('alumni')) return;
+            const judul = $('#exp-judul').val();
+            const tempat = $('#exp-tempat').val();
             dataPengalaman.unshift({
                 id: Date.now(),
                 alumni: currentUser.name,
-                tempat: $('#exp-tempat').val(),
-                judul: $('#exp-judul').val(),
+                tempat: tempat,
+                judul: judul,
                 kegiatan: $('#exp-kegiatan').val(),
                 kendala: $('#exp-kendala').val(),
                 solusi: $('#exp-solusi').val(),
                 tips: $('#exp-tips').val()
             });
+            catatLog('Pengalaman PKL', `Menambahkan pengalaman PKL "${judul}" di ${tempat}`);
             loadPage('dashboard-alumni');
             showNotifToast('Pengalaman PKL berhasil dibagikan kepada siswa.');
         });
@@ -1941,27 +2218,40 @@
 
         $(document).on('submit', '#submit-ulasan', function(e) {
             e.preventDefault();
+            if (!izin('alumni')) return;
             const idTempat = parseInt($('#ulasan-tempat').val());
             const tempatObj = dataTempatPKL.find(t => t.id === idTempat);
+            if (!tempatObj) return;
+            const rating = parseInt($('#ulasan-rating-val').val());
             dataUlasan.unshift({
                 id: Date.now(),
                 alumni: currentUser.name,
                 id_tempat: idTempat,
                 tempat: tempatObj.nama,
-                rating: parseInt($('#ulasan-rating-val').val()),
+                rating: rating,
                 komentar: $('#ulasan-komentar').val(),
-                tanggal: '2026-11-13'
+                tanggal: hariIniWIB()
             });
+            catatLog('Ulasan & Rating', `Memberi ulasan dan rating ${rating} bintang untuk ${tempatObj.nama}`);
             loadPage('ulasan-rating');
             showNotifToast('Ulasan dan rating berhasil dikirim.');
         });
 
+        // ---------- SEMUA ROLE: Profil (password TIDAK dicatat di log) ----------
         $(document).on('submit', '#form-profil', function(e) {
             e.preventDefault();
+            if (!currentUser) return;
             const newPass = $('#profil-new-pass').val().trim();
             if (newPass) {
+                if (newPass.length < 6) {
+                    showNotifToast('Password baru minimal 6 karakter.', 'warning');
+                    return;
+                }
+                const akun = daftarAkun.find(a => a.id === currentUser.id);
+                if (akun) akun.password = newPass;
                 currentUser.password = newPass;
                 $('#profil-new-pass').val('');
+                catatLog('Profil', 'Mengganti password akun');
                 showNotifToast('Password akun berhasil diperbarui.');
             } else {
                 showNotifToast('Tidak ada perubahan password yang dimasukkan.', 'info');
@@ -1969,15 +2259,16 @@
         });
 
         // =====================================================================
-        // BACA PARAMETER URL OTOMATIS UNTUK IMPORT LANGSUNG KE FIGMA
+        // INISIALISASI: PULIHKAN SESI & BACA PARAMETER URL
+        // Parameter ?role=... TIDAK lagi dapat dipakai untuk masuk tanpa login.
+        // Halaman hanya dibuka jika ada sesi login valid dan sesuai role.
         // =====================================================================
         $(document).ready(function() {
             const params = new URLSearchParams(window.location.search);
-            const roleParam = params.get('role');
             const pageParam = params.get('page');
             const modalParam = params.get('modal');
 
-            // Mode Capture Modal Statis di Figma
+            // Mode pratinjau modal statis (hanya tampilan form, tanpa data/aksi sensitif)
             if (modalParam === 'registrasi-siswa') {
                 $('#login-page').hide();
                 $('#modalRegSiswa').addClass('figma-modal-static show');
@@ -1988,23 +2279,22 @@
                 $('#modalAktivasiAlumni').addClass('figma-modal-static show');
                 return;
             }
-            if (modalParam === 'detail-tempat') {
-                $('#login-page').hide();
-                isiModalDetail(1);
-                $('#modalDetailTempat').addClass('figma-modal-static show');
-                return;
-            }
-            if (modalParam === 'form-tempat') {
-                $('#login-page').hide();
-                $('#modalFormTempat').addClass('figma-modal-static show');
-                return;
-            }
 
-            // Mode Capture Langsung ke Dashboard / Sub-Halaman per Role
-            if (roleParam || pageParam) {
-                const targetRole = menusByRole[roleParam] ? roleParam : 'siswa';
-                const akunDefault = daftarAkun.find(a => a.role === targetRole) || daftarAkun[2];
-                masukKeDashboard(akunDefault, pageParam, true);
+            // Pulihkan sesi login (sessionStorage) setelah refresh halaman
+            let usernameSesi = null;
+            try { usernameSesi = sessionStorage.getItem(SESSION_KEY); } catch (err) {}
+            const akunSesi = usernameSesi ? daftarAkun.find(a => a.username === usernameSesi && a.status === 'aktif') : null;
+
+            if (akunSesi) {
+                masukKeDashboard(akunSesi, pageParam, true);
+            } else if (params.get('role') || pageParam) {
+                // Belum login tetapi mencoba membuka halaman internal lewat URL
+                if (window.history && window.history.replaceState) {
+                    const url = new URL(window.location);
+                    url.search = '';
+                    window.history.replaceState({}, '', url);
+                }
+                $('#login-alert').removeClass('d-none').text('Anda harus login terlebih dahulu untuk membuka halaman tersebut.');
             }
         });
     </script>
