@@ -187,136 +187,47 @@
             color: #f59e0b;
         }
 
-        /* =====================================================================
-           STYLING KHUSUS SISTEM NOTIFIKASI DINAMIS BERBASIS ROLE
-        ====================================================================== */
-        .notif-dropdown-menu {
-            width: 380px;
-            max-width: 92vw;
-            border-radius: 14px;
+        /* Notifikasi Simple & Bersih */
+        .notif-menu-simple {
+            width: 320px;
+            max-width: 90vw;
+            border-radius: 12px;
             padding: 0;
             overflow: hidden;
-            border: 1px solid rgba(15, 41, 66, 0.08);
         }
 
-        .notif-dropdown-header {
-            background-color: var(--navy-primary);
-            color: #ffffff;
-            padding: 12px 16px;
-        }
-
-        .notif-scroll-area {
-            max-height: 350px;
+        .notif-list-body {
+            max-height: 300px;
             overflow-y: auto;
         }
 
-        .notif-scroll-area::-webkit-scrollbar {
-            width: 5px;
-        }
-
-        .notif-scroll-area::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        .notif-item {
+        .notif-row {
             display: flex;
             align-items: flex-start;
-            gap: 12px;
-            padding: 12px 16px;
+            gap: 10px;
+            padding: 10px 14px;
             border-bottom: 1px solid #f1f5f9;
-            transition: background-color 0.2s ease;
             cursor: pointer;
-            position: relative;
-            text-decoration: none;
-            color: inherit;
+            transition: background-color 0.15s ease;
         }
 
-        .notif-item:hover {
+        .notif-row:hover {
             background-color: #f8fafc;
         }
 
-        .notif-item.unread {
-            background-color: #eff6ff;
+        .notif-row.unread {
+            background-color: #f0f7ff;
         }
 
-        .notif-item.unread:hover {
-            background-color: #e0f2fe;
-        }
-
-        .notif-unread-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--accent-blue);
-            flex-shrink: 0;
-            margin-top: 6px;
-        }
-
-        .notif-icon-wrap {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
+        .notif-badge-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
             flex-shrink: 0;
-        }
-
-        .notif-type-berhasil .notif-icon-wrap {
-            background-color: #dcfce7;
-            color: #16a34a;
-        }
-
-        .notif-type-ditolak .notif-icon-wrap {
-            background-color: #fee2e2;
-            color: #dc2626;
-        }
-
-        .notif-type-menunggu .notif-icon-wrap {
-            background-color: #fef3c7;
-            color: #d97706;
-        }
-
-        .notif-type-informasi .notif-icon-wrap {
-            background-color: #dbeafe;
-            color: #2563eb;
-        }
-
-        .notif-status-pill {
-            font-size: 0.65rem;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 20px;
-            letter-spacing: 0.2px;
-            white-space: nowrap;
-        }
-
-        .notif-pill-berhasil {
-            background-color: #dcfce7;
-            color: #15803d;
-        }
-
-        .notif-pill-ditolak {
-            background-color: #fee2e2;
-            color: #b91c1c;
-        }
-
-        .notif-pill-menunggu {
-            background-color: #fef3c7;
-            color: #b45309;
-        }
-
-        .notif-pill-informasi {
-            background-color: #dbeafe;
-            color: #1d4ed8;
-        }
-
-        .notif-dropdown-footer {
-            background-color: #f8fafc;
-            padding: 10px 16px;
-            border-top: 1px solid #e2e8f0;
+            font-size: 0.95rem;
         }
 
         @media (max-width: 768px) {
@@ -575,29 +486,19 @@
                     <h6 class="mb-0 fw-bold text-dark" id="page-title">Dashboard</h6>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <!-- Notifikasi Dinamis Berdasarkan Role (Siswa / Guru / Alumni) -->
-                    <div class="dropdown" id="notif-dropdown-wrapper">
-                        <button class="btn btn-light position-relative border" id="btn-notif-bell" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notifikasi">
-                            <i class="bi bi-bell fs-6"></i>
+                    <!-- Notifikasi Simple Berdasarkan Role (Siswa / Guru / Alumni) -->
+                    <div class="dropdown">
+                        <button class="btn btn-light position-relative border" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                            <i class="bi bi-bell"></i>
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notif-count">0</span>
                         </button>
-                        <div class="dropdown-menu dropdown-menu-end shadow-lg notif-dropdown-menu" id="notif-dropdown-menu">
-                            <div class="notif-dropdown-header d-flex justify-content-between align-items-center">
-                                <div>
-                                    <div class="fw-bold small mb-0"><i class="bi bi-bell-fill me-1"></i> Notifikasi</div>
-                                    <small class="text-white-50" style="font-size: 0.7rem;" id="notif-role-subtitle">Aktivitas Sistem PKL</small>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-light py-0 px-2" style="font-size: 0.7rem;" id="btn-mark-all-read" title="Tandai semua sebagai sudah dibaca">
-                                    <i class="bi bi-check2-all me-1"></i>Tandai dibaca
-                                </button>
+                        <div class="dropdown-menu dropdown-menu-end shadow border-0 notif-menu-simple">
+                            <div class="px-3 py-2 text-white d-flex justify-content-between align-items-center" style="background-color: var(--navy-primary);">
+                                <span class="fw-bold small">Notifikasi</span>
+                                <button type="button" class="btn btn-link btn-sm text-white-50 text-decoration-none p-0" style="font-size: 0.72rem;" id="btn-mark-all-read">Tandai dibaca</button>
                             </div>
-                            <div class="notif-scroll-area" id="notif-list">
-                                <!-- Item notifikasi dinamis sesuai role dirender oleh JS -->
-                            </div>
-                            <div class="notif-dropdown-footer text-center">
-                                <button type="button" class="btn btn-sm btn-navy w-100 fw-semibold" id="btn-lihat-semua-notif">
-                                    <i class="bi bi-list-ul me-1"></i>Lihat Semua Notifikasi
-                                </button>
+                            <div class="notif-list-body" id="notif-list">
+                                <!-- Diisi dinamis sesuai role yang sedang login -->
                             </div>
                         </div>
                     </div>
@@ -621,36 +522,6 @@
             <main class="p-4" id="content-area">
                 <!-- Konten halaman dirender di sini -->
             </main>
-        </div>
-    </div>
-
-    <!-- Modal Semua Notifikasi -->
-    <div class="modal fade" id="modalSemuaNotifikasi" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header text-white" style="background-color: var(--navy-primary);">
-                    <div>
-                        <h5 class="modal-title fs-6 fw-bold mb-0"><i class="bi bi-bell-fill me-2"></i>Semua Notifikasi</h5>
-                        <small class="text-white-50" id="modal-notif-subtitle">Riwayat pemberitahuan aktivitas PKL Anda</small>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="bg-light px-3 py-2 border-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-navy active filter-modal-notif" data-filter="all">Semua</button>
-                        <button type="button" class="btn btn-outline-secondary filter-modal-notif" data-filter="unread">Belum Dibaca</button>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-primary" id="btn-modal-mark-all-read">
-                        <i class="bi bi-check2-all me-1"></i>Tandai Semua Sudah Dibaca
-                    </button>
-                </div>
-                <div class="modal-body p-0" id="modal-notif-list">
-                    <!-- Daftar lengkap notifikasi dirender di sini -->
-                </div>
-                <div class="modal-footer bg-light py-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-                </div>
-            </div>
         </div>
     </div>
 
@@ -856,21 +727,11 @@
         ];
 
         // =====================================================================
-        // SISTEM NOTIFIKASI DINAMIS TERPISAH PER ROLE (SISWA, GURU, ALUMNI, ADMIN)
+        // SISTEM NOTIFIKASI SIMPLE & BERBEDA TIAP ROLE (SISWA, GURU, ALUMNI)
         // =====================================================================
         let dataNotifikasi = [];
         let readNotifIds = new Set();
-        let notifIdCounter = 1;
-        let currentModalNotifFilter = 'all';
 
-        function getWaktuSekarang() {
-            const now = new Date();
-            const tgl = now.toISOString().split('T')[0];
-            const jam = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-            return `${tgl} • ${jam}`;
-        }
-
-        // Mencocokkan nama akun dengan nama di data sistem (mengabaikan keterangan dalam tanda kurung seperti "(Alumni 2025)")
         function isSamePerson(nameA, nameB) {
             if (!nameA || !nameB) return false;
             const cleanA = nameA.replace(/\s*\(.*?\)\s*/g, '').trim().toLowerCase();
@@ -878,14 +739,13 @@
             return cleanA === cleanB;
         }
 
-        // Memastikan guru hanya menerima notifikasi dari siswa bimbingan yang sesuai kompetensinya
         function isSiswaBimbinganGuru(namaSiswa, guruUser) {
             if (!guruUser || guruUser.role !== 'guru') return false;
             const guruJurusan = (guruUser.jurusan || '').toLowerCase();
             let kodeJurusan = '';
-            if (guruJurusan.includes('rpl') || guruJurusan.includes('rekayasa')) kodeJurusan = 'rekayasa perangkat lunak';
-            else if (guruJurusan.includes('tkj') || guruJurusan.includes('jaringan')) kodeJurusan = 'teknik komputer dan jaringan';
-            else if (guruJurusan.includes('mm') || guruJurusan.includes('multimedia')) kodeJurusan = 'multimedia';
+            if (guruJurusan.includes('rpl')) kodeJurusan = 'rekayasa perangkat lunak';
+            else if (guruJurusan.includes('tkj')) kodeJurusan = 'teknik komputer dan jaringan';
+            else if (guruJurusan.includes('mm')) kodeJurusan = 'multimedia';
 
             const siswaAkun = daftarAkun.find(a => a.role === 'siswa' && isSamePerson(a.name, namaSiswa));
             const siswaMaster = masterDataSekolah.find(s => isSamePerson(s.nama, namaSiswa));
@@ -895,499 +755,160 @@
             return jurusanSiswa.includes(kodeJurusan);
         }
 
-        // Menambahkan event notifikasi baru secara real-time untuk role & user spesifik
-        function tambahNotifikasiSistem({ role, targetUser = null, siswaTerkait = null, tipe, judul, deskripsi, waktu = null, targetPage = null, timestamp = null }) {
-            const id = 'notif-live-' + (notifIdCounter++);
+        function tambahNotifikasiSistem(notif) {
             dataNotifikasi.unshift({
-                id,
-                role,
-                targetUser,
-                siswaTerkait,
-                tipe, // 'berhasil' | 'ditolak' | 'menunggu' | 'informasi'
-                judul,
-                deskripsi,
-                waktu: waktu || getWaktuSekarang(),
-                targetPage,
-                timestamp: timestamp || Date.now()
+                id: 'live-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+                waktu: 'Baru saja',
+                ...notif
             });
         }
 
-        // Membangun daftar notifikasi secara eksklusif berdasarkan currentUser.role dan aktivitas nyata
-        function kumpulkanNotifikasiUntukUser(user) {
+        function getNotifikasiByRole(user) {
             if (!user) return [];
             const role = user.role;
-            let hasil = [];
+            let list = [];
 
-            // =================================================================
-            // 1. NOTIFIKASI KHUSUS ROLE: SISWA
-            // =================================================================
+            // 1. NOTIFIKASI SISWA
             if (role === 'siswa') {
-                // a) Status pengajuan PKL milik siswa yang bersangkutan saja
-                const pengajuanSiswa = dataPengajuan.filter(p => isSamePerson(p.siswa, user.name));
-                pengajuanSiswa.forEach(p => {
+                dataPengajuan.filter(p => isSamePerson(p.siswa, user.name)).forEach(p => {
                     if (p.status === 'Diterima') {
-                        hasil.push({
-                            id: `sys-siswa-pengajuan-${p.id}-diterima`,
-                            role: 'siswa',
-                            tipe: 'berhasil',
-                            judul: 'Pengajuan PKL Diterima',
-                            deskripsi: `Pengajuan tempat PKL Anda di ${p.tempat} telah diterima.`,
-                            waktu: p.tanggal,
-                            targetPage: 'status-pengajuan',
-                            timestamp: new Date(p.tanggal).getTime() || 1700000100000
-                        });
+                        list.push({ id: `s-p-${p.id}-ok`, tipe: 'berhasil', judul: 'Pengajuan PKL Diterima', teks: `Pengajuan di ${p.tempat} telah diterima.`, waktu: p.tanggal });
                     } else if (p.status === 'Ditolak') {
-                        hasil.push({
-                            id: `sys-siswa-pengajuan-${p.id}-ditolak`,
-                            role: 'siswa',
-                            tipe: 'ditolak',
-                            judul: 'Pengajuan PKL Ditolak',
-                            deskripsi: `Pengajuan tempat PKL Anda di ${p.tempat} ditolak. Silakan ajukan tempat PKL lain.`,
-                            waktu: p.tanggal,
-                            targetPage: 'status-pengajuan',
-                            timestamp: new Date(p.tanggal).getTime() || 1700000100000
-                        });
+                        list.push({ id: `s-p-${p.id}-no`, tipe: 'ditolak', judul: 'Pengajuan PKL Ditolak', teks: `Pengajuan di ${p.tempat} ditolak.`, waktu: p.tanggal });
                     } else {
-                        hasil.push({
-                            id: `sys-siswa-pengajuan-${p.id}-menunggu`,
-                            role: 'siswa',
-                            tipe: 'menunggu',
-                            judul: 'Pengajuan Masih Menunggu Verifikasi',
-                            deskripsi: `Pengajuan tempat PKL Anda di ${p.tempat} masih menunggu verifikasi pembimbing.`,
-                            waktu: p.tanggal,
-                            targetPage: 'status-pengajuan',
-                            timestamp: new Date(p.tanggal).getTime() || 1700000100000
-                        });
+                        list.push({ id: `s-p-${p.id}-wait`, tipe: 'menunggu', judul: 'Menunggu Verifikasi', teks: `Pengajuan di ${p.tempat} sedang diverifikasi.`, waktu: p.tanggal });
                     }
                 });
 
-                // b) Status laporan monitoring milik siswa yang bersangkutan
-                const monitoringSiswa = dataMonitoring.filter(m => isSamePerson(m.siswa, user.name));
-                monitoringSiswa.forEach(m => {
+                dataMonitoring.filter(m => isSamePerson(m.siswa, user.name)).forEach(m => {
                     if (m.status === 'Disetujui') {
-                        hasil.push({
-                            id: `sys-siswa-mon-${m.id}-setuju`,
-                            role: 'siswa',
-                            tipe: 'berhasil',
-                            judul: 'Laporan Monitoring Disetujui Guru',
-                            deskripsi: `Laporan monitoring "${m.kegiatan}" (${m.tanggal}) telah disetujui guru pembimbing.`,
-                            waktu: m.tanggal,
-                            targetPage: 'monitoring-siswa',
-                            timestamp: new Date(m.tanggal).getTime() || 1700000200000
-                        });
-                    } else if (m.status === 'Perlu Revisi' || m.status === 'Ditolak') {
-                        hasil.push({
-                            id: `sys-siswa-mon-${m.id}-revisi`,
-                            role: 'siswa',
-                            tipe: 'ditolak',
-                            judul: 'Laporan Monitoring Perlu Direvisi',
-                            deskripsi: `Laporan "${m.kegiatan}" perlu direvisi: ${m.catatan || 'Periksa catatan pembimbing.'}`,
-                            waktu: m.tanggal,
-                            targetPage: 'monitoring-siswa',
-                            timestamp: new Date(m.tanggal).getTime() || 1700000200000
-                        });
-                    }
-                });
-
-                // c) Hasil penilaian PKL siswa yang bersangkutan
-                const nilaiSiswa = dataPenilaian.find(n => isSamePerson(n.siswa, user.name));
-                if (nilaiSiswa) {
-                    hasil.push({
-                        id: `sys-siswa-nilai-${nilaiSiswa.id}`,
-                        role: 'siswa',
-                        tipe: 'informasi',
-                        judul: 'Hasil Penilaian PKL Telah Tersedia',
-                        deskripsi: `Hasil penilaian akhir PKL Anda telah tersedia dengan nilai akhir ${nilaiSiswa.akhir}.`,
-                        waktu: '2026-11-13',
-                        targetPage: 'hasil-penilaian',
-                        timestamp: 1700000300000
-                    });
-                }
-            }
-
-            // =================================================================
-            // 2. NOTIFIKASI KHUSUS ROLE: GURU PEMBIMBING
-            // =================================================================
-            else if (role === 'guru') {
-                // a) Pengajuan PKL baru dari siswa bimbingan yang sesuai kewenangan guru
-                const pengajuanBimbingan = dataPengajuan.filter(p => isSiswaBimbinganGuru(p.siswa, user));
-                pengajuanBimbingan.forEach(p => {
-                    if (p.status === 'Menunggu') {
-                        hasil.push({
-                            id: `sys-guru-pengajuan-${p.id}`,
-                            role: 'guru',
-                            tipe: 'menunggu',
-                            judul: 'Pengajuan PKL Baru dari Siswa Bimbingan',
-                            deskripsi: `${p.siswa} mengajukan tempat PKL di ${p.tempat} dan menunggu verifikasi Anda.`,
-                            waktu: p.tanggal,
-                            targetPage: 'kelola-pengajuan',
-                            timestamp: new Date(p.tanggal).getTime() || 1700000100000
-                        });
-                    }
-                });
-
-                // b) Laporan monitoring siswa bimbingan (menunggu verifikasi, disetujui, perlu ditindaklanjuti)
-                const monitoringBimbingan = dataMonitoring.filter(m => isSiswaBimbinganGuru(m.siswa, user));
-                monitoringBimbingan.forEach(m => {
-                    if (m.status === 'Menunggu Verifikasi') {
-                        hasil.push({
-                            id: `sys-guru-mon-wait-${m.id}`,
-                            role: 'guru',
-                            tipe: 'menunggu',
-                            judul: 'Laporan Monitoring Menunggu Verifikasi',
-                            deskripsi: `Terdapat laporan monitoring dari ${m.siswa} ("${m.kegiatan}") yang menunggu verifikasi.`,
-                            waktu: m.tanggal,
-                            targetPage: 'monitoring-admin',
-                            timestamp: new Date(m.tanggal).getTime() || 1700000200000
-                        });
-                    } else if (m.status === 'Disetujui') {
-                        hasil.push({
-                            id: `sys-guru-mon-ok-${m.id}`,
-                            role: 'guru',
-                            tipe: 'berhasil',
-                            judul: 'Laporan Monitoring Berhasil Disetujui',
-                            deskripsi: `Laporan monitoring ${m.siswa} tanggal ${m.tanggal} berhasil disetujui.`,
-                            waktu: m.tanggal,
-                            targetPage: 'monitoring-admin',
-                            timestamp: new Date(m.tanggal).getTime() || 1700000150000
-                        });
+                        list.push({ id: `s-m-${m.id}-ok`, tipe: 'berhasil', judul: 'Monitoring Disetujui Guru', teks: `Laporan "${m.kegiatan}" telah disetujui.`, waktu: m.tanggal });
                     } else if (m.status === 'Perlu Revisi') {
-                        hasil.push({
-                            id: `sys-guru-mon-rev-${m.id}`,
-                            role: 'guru',
-                            tipe: 'ditolak',
-                            judul: 'Laporan Monitoring Perlu Ditindaklanjuti',
-                            deskripsi: `Laporan monitoring ${m.siswa} (${m.tanggal}) perlu ditindaklanjuti lebih lanjut.`,
-                            waktu: m.tanggal,
-                            targetPage: 'monitoring-admin',
-                            timestamp: new Date(m.tanggal).getTime() || 1700000180000
-                        });
+                        list.push({ id: `s-m-${m.id}-rev`, tipe: 'ditolak', judul: 'Monitoring Perlu Direvisi', teks: `Laporan "${m.kegiatan}" perlu diperbaiki.`, waktu: m.tanggal });
                     }
                 });
 
-                // c) Pengingat siswa bimbingan yang belum mengirim laporan monitoring
-                const siswaDiterima = dataPengajuan.filter(p => p.status === 'Diterima' && isSiswaBimbinganGuru(p.siswa, user));
-                siswaDiterima.forEach(s => {
-                    const punyaMonitoring = dataMonitoring.some(m => isSamePerson(m.siswa, s.siswa));
-                    if (!punyaMonitoring) {
-                        hasil.push({
-                            id: `sys-guru-remind-mon-${s.id}`,
-                            role: 'guru',
-                            tipe: 'informasi',
-                            judul: 'Pengingat Siswa Belum Mengirim Laporan Monitoring',
-                            deskripsi: `Siswa bimbingan ${s.siswa} (${s.tempat}) belum mengirimkan laporan monitoring.`,
-                            waktu: 'Pengingat Pembimbing',
-                            targetPage: 'monitoring-admin',
-                            timestamp: 1700000050000
-                        });
-                    }
-                });
-
-                // d) Pengingat pengisian nilai akhir PKL
-                const siswaBelumDinilai = siswaDiterima.filter(s => !dataPenilaian.some(n => isSamePerson(n.siswa, s.siswa)));
-                if (siswaBelumDinilai.length > 0) {
-                    hasil.push({
-                        id: 'sys-guru-remind-nilai-pending',
-                        role: 'guru',
-                        tipe: 'informasi',
-                        judul: 'Pengingat Pengisian Nilai Akhir PKL',
-                        deskripsi: `Terdapat ${siswaBelumDinilai.length} siswa bimbingan yang belum diisi nilai akhir PKL.`,
-                        waktu: 'Pengingat Penilaian',
-                        targetPage: 'monitoring-admin',
-                        timestamp: 1700000060000
-                    });
-                } else if (siswaDiterima.length > 0) {
-                    hasil.push({
-                        id: 'sys-guru-remind-nilai-eval',
-                        role: 'guru',
-                        tipe: 'informasi',
-                        judul: 'Pengingat Evaluasi & Nilai Akhir PKL',
-                        deskripsi: `Periksa dan pastikan nilai akhir PKL siswa bimbingan (${siswaDiterima.map(x => x.siswa).join(', ')}) sudah final.`,
-                        waktu: 'Pengingat Penilaian',
-                        targetPage: 'monitoring-admin',
-                        timestamp: 1700000060000
-                    });
+                const nilai = dataPenilaian.find(n => isSamePerson(n.siswa, user.name));
+                if (nilai) {
+                    list.push({ id: `s-n-${nilai.id}`, tipe: 'informasi', judul: 'Hasil Penilaian PKL Tersedia', teks: `Nilai akhir PKL Anda: ${nilai.akhir}.`, waktu: '2026-11-13' });
                 }
             }
 
-            // =================================================================
-            // 3. NOTIFIKASI KHUSUS ROLE: ALUMNI (TIDAK ADA NOTIFIKASI PENGAJUAN SISWA)
-            // =================================================================
+            // 2. NOTIFIKASI GURU
+            else if (role === 'guru') {
+                dataPengajuan.filter(p => p.status === 'Menunggu' && isSiswaBimbinganGuru(p.siswa, user)).forEach(p => {
+                    list.push({ id: `g-p-${p.id}`, tipe: 'menunggu', judul: 'Pengajuan PKL Baru', teks: `${p.siswa} mengajukan PKL di ${p.tempat}.`, waktu: p.tanggal });
+                });
+
+                dataMonitoring.filter(m => isSiswaBimbinganGuru(m.siswa, user)).forEach(m => {
+                    if (m.status === 'Menunggu Verifikasi') {
+                        list.push({ id: `g-m-${m.id}-wait`, tipe: 'menunggu', judul: 'Monitoring Menunggu Verifikasi', teks: `Laporan dari ${m.siswa} (${m.tanggal}) perlu dicek.`, waktu: m.tanggal });
+                    } else if (m.status === 'Disetujui') {
+                        list.push({ id: `g-m-${m.id}-ok`, tipe: 'berhasil', judul: 'Monitoring Disetujui', teks: `Laporan ${m.siswa} (${m.tanggal}) berhasil disetujui.`, waktu: m.tanggal });
+                    }
+                });
+
+                const siswaBimbingan = dataPengajuan.filter(p => p.status === 'Diterima' && isSiswaBimbinganGuru(p.siswa, user));
+                siswaBimbingan.forEach(s => {
+                    if (!dataMonitoring.some(m => isSamePerson(m.siswa, s.siswa))) {
+                        list.push({ id: `g-rem-mon-${s.id}`, tipe: 'informasi', judul: 'Pengingat Monitoring Siswa', teks: `${s.siswa} belum mengirim laporan monitoring.`, waktu: 'Pengingat' });
+                    }
+                });
+
+                if (siswaBimbingan.length > 0) {
+                    list.push({ id: 'g-rem-nilai', tipe: 'informasi', judul: 'Pengingat Nilai Akhir PKL', teks: 'Pastikan nilai akhir siswa bimbingan sudah terisi.', waktu: 'Pengingat' });
+                }
+            }
+
+            // 3. NOTIFIKASI ALUMNI (Tidak ada notifikasi pengajuan siswa)
             else if (role === 'alumni') {
-                // a) Pengalaman PKL berhasil dikirim & tanggapan siswa terhadap pengalaman alumni
-                const pengalamanAlumni = dataPengalaman.filter(exp => isSamePerson(exp.alumni, user.name));
-                pengalamanAlumni.forEach(exp => {
-                    hasil.push({
-                        id: `sys-alumni-exp-${exp.id}`,
-                        role: 'alumni',
-                        tipe: 'berhasil',
-                        judul: 'Pengalaman PKL Berhasil Dikirim',
-                        deskripsi: `Pengalaman "${exp.judul}" di ${exp.tempat} berhasil dikirim dan dibagikan.`,
-                        waktu: '2026-11-12',
-                        targetPage: 'form-pengalaman',
-                        timestamp: 1700000200000 + exp.id
-                    });
-
-                    hasil.push({
-                        id: `sys-alumni-resp-${exp.id}`,
-                        role: 'alumni',
-                        tipe: 'informasi',
-                        judul: 'Tanggapan Siswa terhadap Pengalaman PKL Anda',
-                        deskripsi: `Siswa aktif membaca dan terbantu oleh pengalaman PKL "${exp.judul}" yang Anda bagikan.`,
-                        waktu: '2026-11-13',
-                        targetPage: 'dashboard-alumni',
-                        timestamp: 1700000250000 + exp.id
-                    });
+                dataPengalaman.filter(exp => isSamePerson(exp.alumni, user.name)).forEach(exp => {
+                    list.push({ id: `a-exp-${exp.id}`, tipe: 'berhasil', judul: 'Pengalaman PKL Terkirim', teks: `Pengalaman "${exp.judul}" berhasil dibagikan.`, waktu: '2026-11-12' });
+                    list.push({ id: `a-resp-${exp.id}`, tipe: 'informasi', judul: 'Tanggapan Siswa', teks: `Siswa membaca pengalaman "${exp.judul}" Anda.`, waktu: '2026-11-13' });
                 });
 
-                // b) Ulasan dan rating tempat PKL berhasil disimpan
-                const ulasanAlumni = dataUlasan.filter(u => isSamePerson(u.alumni, user.name));
-                ulasanAlumni.forEach(u => {
-                    hasil.push({
-                        id: `sys-alumni-ulasan-${u.id}`,
-                        role: 'alumni',
-                        tipe: 'berhasil',
-                        judul: 'Ulasan dan Rating Tempat PKL Berhasil Disimpan',
-                        deskripsi: `Ulasan dan rating ${u.rating} bintang untuk ${u.tempat} berhasil disimpan.`,
-                        waktu: u.tanggal,
-                        targetPage: 'ulasan-rating',
-                        timestamp: new Date(u.tanggal).getTime() || 1700000150000
-                    });
+                dataUlasan.filter(u => isSamePerson(u.alumni, user.name)).forEach(u => {
+                    list.push({ id: `a-uls-${u.id}`, tipe: 'berhasil', judul: 'Ulasan & Rating Disimpan', teks: `Rating ${u.rating}★ untuk ${u.tempat} tersimpan.`, waktu: u.tanggal });
                 });
 
-                // c) Informasi tempat PKL baru
                 if (dataTempatPKL.length > 0) {
-                    const tempatTerbaru = dataTempatPKL[dataTempatPKL.length - 1];
-                    hasil.push({
-                        id: `sys-alumni-tempat-${tempatTerbaru.id}`,
-                        role: 'alumni',
-                        tipe: 'informasi',
-                        judul: 'Informasi Tempat PKL Baru',
-                        deskripsi: `Tempat PKL baru ${tempatTerbaru.nama} (${tempatTerbaru.lokasi}) telah tersedia di daftar mitra PKL.`,
-                        waktu: 'Info Tempat PKL',
-                        targetPage: 'daftar-tempat',
-                        timestamp: 1700000100000
-                    });
+                    const terbaru = dataTempatPKL[dataTempatPKL.length - 1];
+                    list.push({ id: `a-tmp-${terbaru.id}`, tipe: 'informasi', judul: 'Info Tempat PKL Baru', teks: `${terbaru.nama} (${terbaru.lokasi}) tersedia di daftar PKL.`, waktu: 'Info Baru' });
                 }
             }
 
-            // =================================================================
-            // 4. NOTIFIKASI KHUSUS ROLE: ADMIN (TERPISAH DARI SISWA/GURU/ALUMNI)
-            // =================================================================
+            // 4. NOTIFIKASI ADMIN
             else if (role === 'admin') {
-                logAktivitas.slice(0, 3).forEach((l, idx) => {
-                    hasil.push({
-                        id: `sys-admin-log-${idx}-${l.user}`,
-                        role: 'admin',
-                        tipe: 'informasi',
-                        judul: 'Aktivitas Sistem Tercatat',
-                        deskripsi: `${l.user}: ${l.aktivitas}`,
-                        waktu: l.waktu,
-                        targetPage: 'log-aktivitas',
-                        timestamp: 1700000100000 - idx
-                    });
+                logAktivitas.slice(0, 3).forEach((l, i) => {
+                    list.push({ id: `adm-${i}`, tipe: 'informasi', judul: 'Aktivitas Sistem', teks: `${l.user}: ${l.aktivitas}`, waktu: l.waktu });
                 });
             }
 
-            // Gabungkan dengan notifikasi real-time yang sesuai role dan target akun login saat ini
-            const liveNotifs = dataNotifikasi.filter(n => {
+            const liveRoleNotif = dataNotifikasi.filter(n => {
                 if (n.role !== role) return false;
                 if (n.targetUser && !isSamePerson(n.targetUser, user.name)) return false;
                 if (role === 'guru' && n.siswaTerkait && !isSiswaBimbinganGuru(n.siswaTerkait, user)) return false;
                 return true;
             });
 
-            const gabungan = [...liveNotifs, ...hasil];
-            gabungan.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-            return gabungan;
-        }
-
-        function getNotifVisualMeta(tipe) {
-            switch (tipe) {
-                case 'berhasil':
-                    return { icon: 'bi-check-circle-fill', label: 'Berhasil', itemClass: 'notif-type-berhasil', pillClass: 'notif-pill-berhasil' };
-                case 'ditolak':
-                    return { icon: 'bi-x-circle-fill', label: 'Ditolak / Revisi', itemClass: 'notif-type-ditolak', pillClass: 'notif-pill-ditolak' };
-                case 'menunggu':
-                    return { icon: 'bi-hourglass-split', label: 'Menunggu', itemClass: 'notif-type-menunggu', pillClass: 'notif-pill-menunggu' };
-                default:
-                    return { icon: 'bi-info-circle-fill', label: 'Informasi', itemClass: 'notif-type-informasi', pillClass: 'notif-pill-informasi' };
-            }
+            return [...liveRoleNotif, ...list];
         }
 
         function renderNotifikasi() {
             if (!currentUser) return;
+            const notifs = getNotifikasiByRole(currentUser);
+            const unread = notifs.filter(n => !readNotifIds.has(n.id)).length;
 
-            const roleLabels = {
-                siswa: 'Notifikasi Aktivitas PKL Siswa',
-                guru: 'Notifikasi Tugas Guru Pembimbing',
-                alumni: 'Notifikasi Aktivitas Alumni',
-                admin: 'Notifikasi Administrator Sistem'
-            };
-            $('#notif-role-subtitle').text(roleLabels[currentUser.role] || 'Notifikasi Sistem');
-            $('#modal-notif-subtitle').text(`${roleLabels[currentUser.role] || 'Notifikasi'} • ${currentUser.name}`);
-
-            const list = kumpulkanNotifikasiUntukUser(currentUser);
-            const unreadCount = list.filter(n => !readNotifIds.has(n.id)).length;
-
-            // Update badge jumlah belum dibaca pada ikon lonceng
-            if (unreadCount > 0) {
-                $('#notif-count').text(unreadCount > 99 ? '99+' : unreadCount).removeClass('d-none');
+            if (unread > 0) {
+                $('#notif-count').text(unread).removeClass('d-none');
             } else {
-                $('#notif-count').text('0').addClass('d-none');
+                $('#notif-count').addClass('d-none');
             }
 
-            // Render isi dropdown notifikasi
-            if (list.length === 0) {
-                $('#notif-list').html(`
-                    <div class="text-center py-4 px-3 text-muted">
-                        <i class="bi bi-bell-slash fs-3 d-block mb-1 opacity-50"></i>
-                        <div class="small fw-semibold">Belum ada notifikasi</div>
-                        <small style="font-size: 0.72rem;">Pemberitahuan aktivitas Anda akan muncul di sini.</small>
-                    </div>
-                `);
-            } else {
-                const previewList = list.slice(0, 5);
-                const dropdownHtml = previewList.map(n => {
-                    const isUnread = !readNotifIds.has(n.id);
-                    const meta = getNotifVisualMeta(n.tipe);
-                    return `
-                        <div class="notif-item ${meta.itemClass} ${isUnread ? 'unread' : ''}" data-notif-id="${n.id}" data-target-page="${n.targetPage || ''}">
-                            <div class="notif-icon-wrap">
-                                <i class="bi ${meta.icon}"></i>
-                            </div>
-                            <div class="flex-grow-1 min-w-0">
-                                <div class="d-flex justify-content-between align-items-start gap-1 mb-1">
-                                    <span class="fw-semibold small text-dark text-truncate" style="max-width: 200px;" title="${n.judul}">${n.judul}</span>
-                                    <span class="notif-status-pill ${meta.pillClass}">${meta.label}</span>
-                                </div>
-                                <p class="small text-muted mb-1" style="font-size: 0.76rem; line-height: 1.35;">${n.deskripsi}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-secondary" style="font-size: 0.68rem;"><i class="bi bi-clock me-1"></i>${n.waktu}</small>
-                                    ${isUnread ? '<span class="text-primary fw-semibold" style="font-size: 0.68rem;">Tandai dibaca</span>' : '<span class="text-muted" style="font-size: 0.68rem;"><i class="bi bi-check2"></i> Dibaca</span>'}
-                                </div>
-                            </div>
-                            ${isUnread ? '<span class="notif-unread-dot" title="Belum dibaca"></span>' : ''}
-                        </div>
-                    `;
-                }).join('');
-                $('#notif-list').html(dropdownHtml);
-            }
-
-            renderModalSemuaNotifikasi();
-        }
-
-        function renderModalSemuaNotifikasi() {
-            if (!currentUser) return;
-            const allList = kumpulkanNotifikasiUntukUser(currentUser);
-            const filteredList = currentModalNotifFilter === 'unread'
-                ? allList.filter(n => !readNotifIds.has(n.id))
-                : allList;
-
-            if (filteredList.length === 0) {
-                $('#modal-notif-list').html(`
-                    <div class="text-center py-5 px-3 text-muted">
-                        <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-50"></i>
-                        <div class="fw-semibold">Belum ada notifikasi</div>
-                        <small>${currentModalNotifFilter === 'unread' ? 'Semua notifikasi Anda sudah dibaca.' : 'Belum ada riwayat notifikasi untuk akun Anda.'}</small>
-                    </div>
-                `);
+            if (notifs.length === 0) {
+                $('#notif-list').html('<div class="p-4 text-center text-muted small">Belum ada notifikasi</div>');
                 return;
             }
 
-            const modalHtml = filteredList.map(n => {
+            const styleMap = {
+                berhasil: { bg: 'bg-success-subtle text-success', icon: 'bi-check-circle-fill' },
+                ditolak: { bg: 'bg-danger-subtle text-danger', icon: 'bi-x-circle-fill' },
+                menunggu: { bg: 'bg-warning-subtle text-warning', icon: 'bi-hourglass-split' },
+                informasi: { bg: 'bg-primary-subtle text-primary', icon: 'bi-info-circle-fill' }
+            };
+
+            const html = notifs.map(n => {
+                const st = styleMap[n.tipe] || styleMap.informasi;
                 const isUnread = !readNotifIds.has(n.id);
-                const meta = getNotifVisualMeta(n.tipe);
                 return `
-                    <div class="notif-item ${meta.itemClass} ${isUnread ? 'unread' : ''}" data-notif-id="${n.id}" data-target-page="${n.targetPage || ''}">
-                        <div class="notif-icon-wrap">
-                            <i class="bi ${meta.icon}"></i>
+                    <div class="notif-row ${isUnread ? 'unread' : ''}" data-id="${n.id}">
+                        <div class="notif-badge-icon ${st.bg}">
+                            <i class="bi ${st.icon}"></i>
                         </div>
                         <div class="flex-grow-1">
-                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-                                <span class="fw-bold small text-dark">${n.judul}</span>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="notif-status-pill ${meta.pillClass}">${meta.label}</span>
-                                    <small class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-clock me-1"></i>${n.waktu}</small>
-                                </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-semibold small text-dark">${n.judul}</span>
+                                ${isUnread ? '<span class="badge bg-primary rounded-pill" style="font-size:0.6rem;">Baru</span>' : ''}
                             </div>
-                            <p class="small text-secondary mb-1">${n.deskripsi}</p>
-                            <div class="d-flex justify-content-between align-items-center mt-1">
-                                ${n.targetPage ? '<span class="text-primary small fw-semibold" style="font-size: 0.73rem;"><i class="bi bi-arrow-right-circle me-1"></i>Klik untuk membuka halaman terkait</span>' : '<span></span>'}
-                                ${isUnread
-                                    ? `<button type="button" class="btn btn-sm btn-link p-0 text-decoration-none mark-single-read" data-notif-id="${n.id}" style="font-size: 0.73rem;"><i class="bi bi-check2 me-1"></i>Tandai sudah dibaca</button>`
-                                    : '<span class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-check2-all me-1"></i>Sudah dibaca</span>'
-                                }
-                            </div>
+                            <div class="small text-muted" style="font-size: 0.76rem;">${n.teks}</div>
+                            <small class="text-secondary" style="font-size: 0.68rem;">${n.waktu}</small>
                         </div>
-                        ${isUnread ? '<span class="notif-unread-dot" title="Belum dibaca"></span>' : ''}
                     </div>
                 `;
             }).join('');
 
-            $('#modal-notif-list').html(modalHtml);
+            $('#notif-list').html(html);
         }
 
-        $(document).on('click', '.notif-item', function(e) {
-            if ($(e.target).closest('.mark-single-read').length) return;
-            const notifId = $(this).data('notif-id');
-            const targetPage = $(this).data('target-page');
-
-            if (notifId) {
-                readNotifIds.add(notifId);
-                renderNotifikasi();
-            }
-
-            if (targetPage && currentUser && menusByRole[currentUser.role].some(m => m.id === targetPage)) {
-                const modalEl = document.getElementById('modalSemuaNotifikasi');
-                const modalInst = bootstrap.Modal.getInstance(modalEl);
-                if (modalInst) modalInst.hide();
-
-                const ddToggle = document.getElementById('btn-notif-bell');
-                const ddInst = bootstrap.Dropdown.getInstance(ddToggle);
-                if (ddInst) ddInst.hide();
-
-                $('.menu-item').removeClass('active');
-                $(`.menu-item[data-page="${targetPage}"]`).addClass('active');
-                loadPage(targetPage);
-            }
-        });
-
-        $(document).on('click', '.mark-single-read', function(e) {
-            e.stopPropagation();
-            const notifId = $(this).data('notif-id');
-            if (notifId) {
-                readNotifIds.add(notifId);
-                renderNotifikasi();
-            }
-        });
-
-        $(document).on('click', '#btn-mark-all-read, #btn-modal-mark-all-read', function(e) {
-            e.stopPropagation();
-            if (!currentUser) return;
-            const list = kumpulkanNotifikasiUntukUser(currentUser);
-            list.forEach(n => readNotifIds.add(n.id));
+        $(document).on('click', '.notif-row', function() {
+            readNotifIds.add($(this).data('id'));
             renderNotifikasi();
         });
 
-        $(document).on('click', '#btn-lihat-semua-notif', function() {
-            const ddToggle = document.getElementById('btn-notif-bell');
-            const ddInst = bootstrap.Dropdown.getInstance(ddToggle);
-            if (ddInst) ddInst.hide();
-
-            currentModalNotifFilter = 'all';
-            $('.filter-modal-notif').removeClass('btn-navy active').addClass('btn-outline-secondary');
-            $('.filter-modal-notif[data-filter="all"]').removeClass('btn-outline-secondary').addClass('btn-navy active');
-
-            renderModalSemuaNotifikasi();
-            new bootstrap.Modal('#modalSemuaNotifikasi').show();
-        });
-
-        $(document).on('click', '.filter-modal-notif', function() {
-            currentModalNotifFilter = $(this).data('filter');
-            $('.filter-modal-notif').removeClass('btn-navy active').addClass('btn-outline-secondary');
-            $(this).removeClass('btn-outline-secondary').addClass('btn-navy active');
-            renderModalSemuaNotifikasi();
+        $(document).on('click', '#btn-mark-all-read', function() {
+            if (!currentUser) return;
+            getNotifikasiByRole(currentUser).forEach(n => readNotifIds.add(n.id));
+            renderNotifikasi();
         });
 
         // =====================================================================
@@ -1476,7 +997,6 @@
             $('#badge-role').text(akun.role.toUpperCase());
             $('#nav-username').text(akun.name);
 
-            // Muat notifikasi dinamis sesuai role pengguna yang sedang login
             renderNotifikasi();
 
             const activePage = menusByRole[akun.role][0].id;
@@ -2417,7 +1937,7 @@
             showNotifToast('Status akun pengguna berhasil diperbarui.');
         });
 
-        // Submit Pengajuan Siswa -> Memicu Notifikasi Siswa & Guru Pembimbing (Tidak muncul di Alumni)
+        // Submit Pengajuan Siswa
         $(document).on('submit', '#submit-pengajuan', function(e) {
             e.preventDefault();
             const tempatDipilih = $('#pilih-tempat-ajukan').val();
@@ -2433,18 +1953,16 @@
                 role: 'siswa',
                 targetUser: currentUser.name,
                 tipe: 'berhasil',
-                judul: 'Pengajuan Tempat PKL Berhasil Dikirim',
-                deskripsi: `Pengajuan PKL Anda di ${tempatDipilih} berhasil dikirim dan menunggu verifikasi.`,
-                targetPage: 'status-pengajuan'
+                judul: 'Pengajuan Berhasil Dikirim',
+                teks: `Pengajuan PKL ke ${tempatDipilih} berhasil dikirim.`
             });
 
             tambahNotifikasiSistem({
                 role: 'guru',
                 siswaTerkait: currentUser.name,
                 tipe: 'menunggu',
-                judul: 'Pengajuan PKL Baru dari Siswa Bimbingan',
-                deskripsi: `${currentUser.name} mengajukan tempat PKL baru di ${tempatDipilih}.`,
-                targetPage: 'kelola-pengajuan'
+                judul: 'Pengajuan PKL Baru',
+                teks: `${currentUser.name} mengajukan PKL di ${tempatDipilih}.`
             });
 
             renderNotifikasi();
@@ -2452,15 +1970,14 @@
             showNotifToast('Pengajuan tempat PKL berhasil dikirim dan menunggu verifikasi.');
         });
 
-        // CRUD Monitoring Siswa -> Memicu Notifikasi Guru Pembimbing
+        // CRUD Monitoring Siswa
         $(document).on('submit', '#form-tambah-monitoring', function(e) {
             e.preventDefault();
-            const tglMon = $('#mon-tgl').val();
             const kegMon = $('#mon-kegiatan').val();
             dataMonitoring.push({
                 id: Date.now(),
                 siswa: currentUser.name,
-                tanggal: tglMon,
+                tanggal: $('#mon-tgl').val(),
                 kegiatan: kegMon,
                 perkembangan: $('#mon-perkembangan').val(),
                 status: 'Menunggu Verifikasi',
@@ -2471,9 +1988,8 @@
                 role: 'guru',
                 siswaTerkait: currentUser.name,
                 tipe: 'menunggu',
-                judul: 'Terdapat Laporan Monitoring Siswa Menunggu Verifikasi',
-                deskripsi: `${currentUser.name} mengirim laporan monitoring "${kegMon}" (${tglMon}).`,
-                targetPage: 'monitoring-admin'
+                judul: 'Laporan Monitoring Baru',
+                teks: `${currentUser.name} mengirim laporan "${kegMon}".`
             });
 
             renderNotifikasi();
@@ -2491,7 +2007,6 @@
             }
         });
 
-        // Persetujuan Monitoring oleh Guru -> Memicu Notifikasi Siswa terkait & Guru
         $(document).on('click', '.setujui-monitoring', function() {
             const id = $(this).data('id');
             const idx = dataMonitoring.findIndex(m => m.id === id);
@@ -2503,9 +2018,8 @@
                 role: 'siswa',
                 targetUser: itemMon.siswa,
                 tipe: 'berhasil',
-                judul: 'Laporan Monitoring Disetujui Guru',
-                deskripsi: `Laporan monitoring "${itemMon.kegiatan}" (${itemMon.tanggal}) telah disetujui guru pembimbing.`,
-                targetPage: 'monitoring-siswa'
+                judul: 'Monitoring Disetujui Guru',
+                teks: `Laporan "${itemMon.kegiatan}" telah disetujui.`
             });
 
             tambahNotifikasiSistem({
@@ -2513,9 +2027,8 @@
                 targetUser: currentUser.name,
                 siswaTerkait: itemMon.siswa,
                 tipe: 'berhasil',
-                judul: 'Laporan Monitoring Berhasil Disetujui',
-                deskripsi: `Laporan monitoring ${itemMon.siswa} untuk "${itemMon.kegiatan}" telah berhasil disetujui.`,
-                targetPage: 'monitoring-admin'
+                judul: 'Monitoring Berhasil Disetujui',
+                teks: `Anda menyetujui laporan ${itemMon.siswa}.`
             });
 
             renderNotifikasi();
@@ -2523,7 +2036,7 @@
             showNotifToast('Laporan monitoring berhasil disetujui.');
         });
 
-        // CRUD Tempat PKL (Admin) -> Memicu Notifikasi Informasi Tempat PKL Baru bagi Alumni
+        // CRUD Tempat PKL (Admin)
         $(document).on('click', '#btn-tambah-tempat', function() {
             $('#modalTempatTitle').text('Tambah Data Tempat PKL');
             $('#edit-tempat-id').val('');
@@ -2567,9 +2080,8 @@
                 tambahNotifikasiSistem({
                     role: 'alumni',
                     tipe: 'informasi',
-                    judul: 'Informasi Tempat PKL Baru',
-                    deskripsi: `Mitra tempat PKL baru ${obj.nama} (${obj.lokasi}) telah ditambahkan ke sistem.`,
-                    targetPage: 'daftar-tempat'
+                    judul: 'Info Tempat PKL Baru',
+                    teks: `${obj.nama} (${obj.lokasi}) ditambahkan sebagai tempat PKL.`
                 });
             }
             bootstrap.Modal.getInstance(document.getElementById('modalFormTempat')).hide();
@@ -2588,7 +2100,7 @@
             }
         });
 
-        // Tombol Terima / Tolak Pengajuan -> Hanya memicu notifikasi pada akun Siswa yang bersangkutan
+        // Verifikasi Pengajuan (Terima / Tolak)
         $(document).on('click', '.ubah-status', function() {
             const id = $(this).data('id');
             const status = $(this).data('status');
@@ -2596,32 +2108,20 @@
             const itemPengajuan = dataPengajuan[idx];
             dataPengajuan[idx].status = status;
 
-            if (status === 'Diterima') {
-                tambahNotifikasiSistem({
-                    role: 'siswa',
-                    targetUser: itemPengajuan.siswa,
-                    tipe: 'berhasil',
-                    judul: 'Pengajuan PKL Diterima',
-                    deskripsi: `Pengajuan PKL Anda di ${itemPengajuan.tempat} telah diterima.`,
-                    targetPage: 'status-pengajuan'
-                });
-            } else if (status === 'Ditolak') {
-                tambahNotifikasiSistem({
-                    role: 'siswa',
-                    targetUser: itemPengajuan.siswa,
-                    tipe: 'ditolak',
-                    judul: 'Pengajuan PKL Ditolak',
-                    deskripsi: `Pengajuan PKL Anda di ${itemPengajuan.tempat} ditolak. Silakan ajukan tempat PKL lain.`,
-                    targetPage: 'status-pengajuan'
-                });
-            }
+            tambahNotifikasiSistem({
+                role: 'siswa',
+                targetUser: itemPengajuan.siswa,
+                tipe: status === 'Diterima' ? 'berhasil' : 'ditolak',
+                judul: status === 'Diterima' ? 'Pengajuan PKL Diterima' : 'Pengajuan PKL Ditolak',
+                teks: `Pengajuan Anda di ${itemPengajuan.tempat} ${status.toLowerCase()}.`
+            });
 
             renderNotifikasi();
             loadPage('kelola-pengajuan');
             showNotifToast(`Status pengajuan diperbarui menjadi ${status}.`);
         });
 
-        // Simpan Nilai Terbobot (20%, 20%, 30%, 15%, 15%) -> Memicu Notifikasi Siswa terkait
+        // Simpan Nilai Terbobot (20%, 20%, 30%, 15%, 15%)
         $(document).on('submit', '#form-input-nilai', function(e) {
             e.preventDefault();
             const d = parseFloat($('#n-disiplin').val());
@@ -2648,16 +2148,15 @@
                 role: 'siswa',
                 targetUser: 'Andi Pratama',
                 tipe: 'informasi',
-                judul: 'Hasil Penilaian PKL Telah Tersedia',
-                deskripsi: `Hasil penilaian PKL Anda telah diperbarui dengan nilai akhir ${nilaiAkhir}.`,
-                targetPage: 'hasil-penilaian'
+                judul: 'Hasil Penilaian PKL Tersedia',
+                teks: `Nilai akhir PKL Anda diperbarui menjadi ${nilaiAkhir}.`
             });
 
             renderNotifikasi();
             showNotifToast(`Nilai PKL siswa berhasil disimpan (Nilai Akhir Terbobot: ${nilaiAkhir}).`);
         });
 
-        // Pengalaman & Ulasan Alumni -> Hanya memicu notifikasi pada role Alumni
+        // Pengalaman & Ulasan Alumni
         $(document).on('submit', '#submit-pengalaman', function(e) {
             e.preventDefault();
             const tempatExp = $('#exp-tempat').val();
@@ -2677,9 +2176,8 @@
                 role: 'alumni',
                 targetUser: currentUser.name,
                 tipe: 'berhasil',
-                judul: 'Pengalaman PKL Berhasil Dikirim',
-                deskripsi: `Pengalaman "${judulExp}" di ${tempatExp} berhasil dikirim kepada siswa.`,
-                targetPage: 'dashboard-alumni'
+                judul: 'Pengalaman PKL Terkirim',
+                teks: `Pengalaman "${judulExp}" berhasil dikirim.`
             });
 
             renderNotifikasi();
@@ -2714,9 +2212,8 @@
                 role: 'alumni',
                 targetUser: currentUser.name,
                 tipe: 'berhasil',
-                judul: 'Ulasan dan Rating Tempat PKL Berhasil Disimpan',
-                deskripsi: `Ulasan dan rating ${ratingVal} bintang untuk ${tempatObj.nama} berhasil disimpan.`,
-                targetPage: 'ulasan-rating'
+                judul: 'Ulasan & Rating Disimpan',
+                teks: `Rating ${ratingVal}★ untuk ${tempatObj.nama} berhasil disimpan.`
             });
 
             renderNotifikasi();
