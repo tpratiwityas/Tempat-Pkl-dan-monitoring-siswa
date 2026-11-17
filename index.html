@@ -188,10 +188,10 @@
         }
 
         /* =====================================================================
-           STYLING KHUSUS SISTEM NOTIFIKASI DINAMIS
+           STYLING KHUSUS SISTEM NOTIFIKASI DINAMIS BERBASIS ROLE
         ====================================================================== */
         .notif-dropdown-menu {
-            width: 370px;
+            width: 380px;
             max-width: 92vw;
             border-radius: 14px;
             padding: 0;
@@ -206,7 +206,7 @@
         }
 
         .notif-scroll-area {
-            max-height: 340px;
+            max-height: 350px;
             overflow-y: auto;
         }
 
@@ -290,6 +290,7 @@
             padding: 2px 8px;
             border-radius: 20px;
             letter-spacing: 0.2px;
+            white-space: nowrap;
         }
 
         .notif-pill-berhasil {
@@ -574,7 +575,7 @@
                     <h6 class="mb-0 fw-bold text-dark" id="page-title">Dashboard</h6>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    <!-- Notifikasi Dinamis Berdasarkan Role -->
+                    <!-- Notifikasi Dinamis Berdasarkan Role (Siswa / Guru / Alumni) -->
                     <div class="dropdown" id="notif-dropdown-wrapper">
                         <button class="btn btn-light position-relative border" id="btn-notif-bell" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Notifikasi">
                             <i class="bi bi-bell fs-6"></i>
@@ -591,7 +592,7 @@
                                 </button>
                             </div>
                             <div class="notif-scroll-area" id="notif-list">
-                                <!-- Item notifikasi dinamis dirender oleh JS -->
+                                <!-- Item notifikasi dinamis sesuai role dirender oleh JS -->
                             </div>
                             <div class="notif-dropdown-footer text-center">
                                 <button type="button" class="btn btn-sm btn-navy w-100 fw-semibold" id="btn-lihat-semua-notif">
@@ -855,7 +856,7 @@
         ];
 
         // =====================================================================
-        // SISTEM NOTIFIKASI DINAMIS BERBASIS ROLE (SISWA, GURU, ALUMNI)
+        // SISTEM NOTIFIKASI DINAMIS TERPISAH PER ROLE (SISWA, GURU, ALUMNI, ADMIN)
         // =====================================================================
         let dataNotifikasi = [];
         let readNotifIds = new Set();
@@ -869,7 +870,7 @@
             return `${tgl} • ${jam}`;
         }
 
-        // Helper pencocokan nama alumni/siswa (misal "Dika Saputra (Alumni 2025)" cocok dengan "Dika Saputra")
+        // Mencocokkan nama akun dengan nama di data sistem (mengabaikan keterangan dalam tanda kurung seperti "(Alumni 2025)")
         function isSamePerson(nameA, nameB) {
             if (!nameA || !nameB) return false;
             const cleanA = nameA.replace(/\s*\(.*?\)\s*/g, '').trim().toLowerCase();
@@ -877,7 +878,7 @@
             return cleanA === cleanB;
         }
 
-        // Helper mengecek apakah guru memiliki kewenangan membimbing siswa tersebut
+        // Memastikan guru hanya menerima notifikasi dari siswa bimbingan yang sesuai kompetensinya
         function isSiswaBimbinganGuru(namaSiswa, guruUser) {
             if (!guruUser || guruUser.role !== 'guru') return false;
             const guruJurusan = (guruUser.jurusan || '').toLowerCase();
@@ -894,13 +895,14 @@
             return jurusanSiswa.includes(kodeJurusan);
         }
 
-        // Menambahkan notifikasi baru secara real-time saat aktivitas sistem terjadi
-        function tambahNotifikasiSistem({ role, targetUser = null, tipe, judul, deskripsi, waktu = null, targetPage = null, timestamp = null }) {
+        // Menambahkan event notifikasi baru secara real-time untuk role & user spesifik
+        function tambahNotifikasiSistem({ role, targetUser = null, siswaTerkait = null, tipe, judul, deskripsi, waktu = null, targetPage = null, timestamp = null }) {
             const id = 'notif-live-' + (notifIdCounter++);
             dataNotifikasi.unshift({
                 id,
                 role,
                 targetUser,
+                siswaTerkait,
                 tipe, // 'berhasil' | 'ditolak' | 'menunggu' | 'informasi'
                 judul,
                 deskripsi,
@@ -910,15 +912,17 @@
             });
         }
 
-        // Sinkronisasi notifikasi otomatis dari data sistem nyata (dataPengajuan, dataMonitoring, dataPenilaian, dataPengalaman, dataUlasan, dataTempatPKL)
+        // Membangun daftar notifikasi secara eksklusif berdasarkan currentUser.role dan aktivitas nyata
         function kumpulkanNotifikasiUntukUser(user) {
             if (!user) return [];
             const role = user.role;
             let hasil = [];
 
-            // 1. ROLE SISWA
+            // =================================================================
+            // 1. NOTIFIKASI KHUSUS ROLE: SISWA
+            // =================================================================
             if (role === 'siswa') {
-                // Pengajuan PKL milik siswa yang bersangkutan
+                // a) Status pengajuan PKL milik siswa yang bersangkutan saja
                 const pengajuanSiswa = dataPengajuan.filter(p => isSamePerson(p.siswa, user.name));
                 pengajuanSiswa.forEach(p => {
                     if (p.status === 'Diterima') {
@@ -927,7 +931,7 @@
                             role: 'siswa',
                             tipe: 'berhasil',
                             judul: 'Pengajuan PKL Diterima',
-                            deskripsi: `Pengajuan PKL Anda di ${p.tempat} telah diterima.`,
+                            deskripsi: `Pengajuan tempat PKL Anda di ${p.tempat} telah diterima.`,
                             waktu: p.tanggal,
                             targetPage: 'status-pengajuan',
                             timestamp: new Date(p.tanggal).getTime() || 1700000100000
@@ -938,7 +942,7 @@
                             role: 'siswa',
                             tipe: 'ditolak',
                             judul: 'Pengajuan PKL Ditolak',
-                            deskripsi: `Pengajuan PKL Anda di ${p.tempat} ditolak. Silakan ajukan tempat lain.`,
+                            deskripsi: `Pengajuan tempat PKL Anda di ${p.tempat} ditolak. Silakan ajukan tempat PKL lain.`,
                             waktu: p.tanggal,
                             targetPage: 'status-pengajuan',
                             timestamp: new Date(p.tanggal).getTime() || 1700000100000
@@ -949,7 +953,7 @@
                             role: 'siswa',
                             tipe: 'menunggu',
                             judul: 'Pengajuan Masih Menunggu Verifikasi',
-                            deskripsi: `Pengajuan PKL di ${p.tempat} sedang menunggu verifikasi pembimbing.`,
+                            deskripsi: `Pengajuan tempat PKL Anda di ${p.tempat} masih menunggu verifikasi pembimbing.`,
                             waktu: p.tanggal,
                             targetPage: 'status-pengajuan',
                             timestamp: new Date(p.tanggal).getTime() || 1700000100000
@@ -957,7 +961,7 @@
                     }
                 });
 
-                // Laporan Monitoring milik siswa yang bersangkutan
+                // b) Status laporan monitoring milik siswa yang bersangkutan
                 const monitoringSiswa = dataMonitoring.filter(m => isSamePerson(m.siswa, user.name));
                 monitoringSiswa.forEach(m => {
                     if (m.status === 'Disetujui') {
@@ -966,7 +970,7 @@
                             role: 'siswa',
                             tipe: 'berhasil',
                             judul: 'Laporan Monitoring Disetujui Guru',
-                            deskripsi: `Laporan "${m.kegiatan}" (${m.tanggal}) telah disetujui guru pembimbing.`,
+                            deskripsi: `Laporan monitoring "${m.kegiatan}" (${m.tanggal}) telah disetujui guru pembimbing.`,
                             waktu: m.tanggal,
                             targetPage: 'monitoring-siswa',
                             timestamp: new Date(m.tanggal).getTime() || 1700000200000
@@ -977,7 +981,7 @@
                             role: 'siswa',
                             tipe: 'ditolak',
                             judul: 'Laporan Monitoring Perlu Direvisi',
-                            deskripsi: `Laporan "${m.kegiatan}" memerlukan perbaikan: ${m.catatan || 'Periksa kembali detail kegiatan.'}`,
+                            deskripsi: `Laporan "${m.kegiatan}" perlu direvisi: ${m.catatan || 'Periksa catatan pembimbing.'}`,
                             waktu: m.tanggal,
                             targetPage: 'monitoring-siswa',
                             timestamp: new Date(m.tanggal).getTime() || 1700000200000
@@ -985,7 +989,7 @@
                     }
                 });
 
-                // Hasil Penilaian PKL milik siswa yang bersangkutan
+                // c) Hasil penilaian PKL siswa yang bersangkutan
                 const nilaiSiswa = dataPenilaian.find(n => isSamePerson(n.siswa, user.name));
                 if (nilaiSiswa) {
                     hasil.push({
@@ -993,7 +997,7 @@
                         role: 'siswa',
                         tipe: 'informasi',
                         judul: 'Hasil Penilaian PKL Telah Tersedia',
-                        deskripsi: `Transkrip nilai akhir PKL Anda telah diterbitkan dengan skor akhir ${nilaiSiswa.akhir}.`,
+                        deskripsi: `Hasil penilaian akhir PKL Anda telah tersedia dengan nilai akhir ${nilaiSiswa.akhir}.`,
                         waktu: '2026-11-13',
                         targetPage: 'hasil-penilaian',
                         timestamp: 1700000300000
@@ -1001,9 +1005,11 @@
                 }
             }
 
-            // 2. ROLE GURU
+            // =================================================================
+            // 2. NOTIFIKASI KHUSUS ROLE: GURU PEMBIMBING
+            // =================================================================
             else if (role === 'guru') {
-                // Pengajuan PKL baru dari siswa bimbingan yang berwenang
+                // a) Pengajuan PKL baru dari siswa bimbingan yang sesuai kewenangan guru
                 const pengajuanBimbingan = dataPengajuan.filter(p => isSiswaBimbinganGuru(p.siswa, user));
                 pengajuanBimbingan.forEach(p => {
                     if (p.status === 'Menunggu') {
@@ -1012,7 +1018,7 @@
                             role: 'guru',
                             tipe: 'menunggu',
                             judul: 'Pengajuan PKL Baru dari Siswa Bimbingan',
-                            deskripsi: `${p.siswa} mengajukan penempatan PKL di ${p.tempat}.`,
+                            deskripsi: `${p.siswa} mengajukan tempat PKL di ${p.tempat} dan menunggu verifikasi Anda.`,
                             waktu: p.tanggal,
                             targetPage: 'kelola-pengajuan',
                             timestamp: new Date(p.tanggal).getTime() || 1700000100000
@@ -1020,7 +1026,7 @@
                     }
                 });
 
-                // Laporan monitoring siswa bimbingan
+                // b) Laporan monitoring siswa bimbingan (menunggu verifikasi, disetujui, perlu ditindaklanjuti)
                 const monitoringBimbingan = dataMonitoring.filter(m => isSiswaBimbinganGuru(m.siswa, user));
                 monitoringBimbingan.forEach(m => {
                     if (m.status === 'Menunggu Verifikasi') {
@@ -1029,7 +1035,7 @@
                             role: 'guru',
                             tipe: 'menunggu',
                             judul: 'Laporan Monitoring Menunggu Verifikasi',
-                            deskripsi: `${m.siswa} mengirim laporan "${m.kegiatan}" (${m.tanggal}).`,
+                            deskripsi: `Terdapat laporan monitoring dari ${m.siswa} ("${m.kegiatan}") yang menunggu verifikasi.`,
                             waktu: m.tanggal,
                             targetPage: 'monitoring-admin',
                             timestamp: new Date(m.tanggal).getTime() || 1700000200000
@@ -1040,7 +1046,7 @@
                             role: 'guru',
                             tipe: 'berhasil',
                             judul: 'Laporan Monitoring Berhasil Disetujui',
-                            deskripsi: `Laporan monitoring ${m.siswa} tanggal ${m.tanggal} telah diverifikasi & disetujui.`,
+                            deskripsi: `Laporan monitoring ${m.siswa} tanggal ${m.tanggal} berhasil disetujui.`,
                             waktu: m.tanggal,
                             targetPage: 'monitoring-admin',
                             timestamp: new Date(m.tanggal).getTime() || 1700000150000
@@ -1051,7 +1057,7 @@
                             role: 'guru',
                             tipe: 'ditolak',
                             judul: 'Laporan Monitoring Perlu Ditindaklanjuti',
-                            deskripsi: `Laporan ${m.siswa} (${m.tanggal}) ditandai perlu revisi dan menunggu tindak lanjut.`,
+                            deskripsi: `Laporan monitoring ${m.siswa} (${m.tanggal}) perlu ditindaklanjuti lebih lanjut.`,
                             waktu: m.tanggal,
                             targetPage: 'monitoring-admin',
                             timestamp: new Date(m.tanggal).getTime() || 1700000180000
@@ -1059,7 +1065,7 @@
                     }
                 });
 
-                // Pengingat siswa bimbingan yang diterima PKL namun belum mengirim laporan monitoring
+                // c) Pengingat siswa bimbingan yang belum mengirim laporan monitoring
                 const siswaDiterima = dataPengajuan.filter(p => p.status === 'Diterima' && isSiswaBimbinganGuru(p.siswa, user));
                 siswaDiterima.forEach(s => {
                     const punyaMonitoring = dataMonitoring.some(m => isSamePerson(m.siswa, s.siswa));
@@ -1068,16 +1074,16 @@
                             id: `sys-guru-remind-mon-${s.id}`,
                             role: 'guru',
                             tipe: 'informasi',
-                            judul: 'Pengingat Laporan Monitoring Siswa',
-                            deskripsi: `Siswa bimbingan ${s.siswa} (${s.tempat}) belum mengirim laporan monitoring.`,
-                            waktu: 'Pengingat Sistem',
+                            judul: 'Pengingat Siswa Belum Mengirim Laporan Monitoring',
+                            deskripsi: `Siswa bimbingan ${s.siswa} (${s.tempat}) belum mengirimkan laporan monitoring.`,
+                            waktu: 'Pengingat Pembimbing',
                             targetPage: 'monitoring-admin',
                             timestamp: 1700000050000
                         });
                     }
                 });
 
-                // Pengingat pengisian nilai akhir PKL
+                // d) Pengingat pengisian nilai akhir PKL
                 const siswaBelumDinilai = siswaDiterima.filter(s => !dataPenilaian.some(n => isSamePerson(n.siswa, s.siswa)));
                 if (siswaBelumDinilai.length > 0) {
                     hasil.push({
@@ -1085,28 +1091,30 @@
                         role: 'guru',
                         tipe: 'informasi',
                         judul: 'Pengingat Pengisian Nilai Akhir PKL',
-                        deskripsi: `Terdapat ${siswaBelumDinilai.length} siswa bimbingan yang belum memiliki nilai akhir PKL.`,
-                        waktu: 'Pengingat Evaluasi',
+                        deskripsi: `Terdapat ${siswaBelumDinilai.length} siswa bimbingan yang belum diisi nilai akhir PKL.`,
+                        waktu: 'Pengingat Penilaian',
                         targetPage: 'monitoring-admin',
                         timestamp: 1700000060000
                     });
                 } else if (siswaDiterima.length > 0) {
                     hasil.push({
-                        id: 'sys-guru-remind-nilai-check',
+                        id: 'sys-guru-remind-nilai-eval',
                         role: 'guru',
                         tipe: 'informasi',
-                        judul: 'Pengingat Pengisian & Finalisasi Nilai Akhir PKL',
-                        deskripsi: `Pastikan komponen nilai akhir PKL seluruh siswa bimbingan (${siswaDiterima.map(x => x.siswa).join(', ')}) telah terisi lengkap.`,
-                        waktu: 'Evaluasi Akhir PKL',
+                        judul: 'Pengingat Evaluasi & Nilai Akhir PKL',
+                        deskripsi: `Periksa dan pastikan nilai akhir PKL siswa bimbingan (${siswaDiterima.map(x => x.siswa).join(', ')}) sudah final.`,
+                        waktu: 'Pengingat Penilaian',
                         targetPage: 'monitoring-admin',
                         timestamp: 1700000060000
                     });
                 }
             }
 
-            // 3. ROLE ALUMNI
+            // =================================================================
+            // 3. NOTIFIKASI KHUSUS ROLE: ALUMNI (TIDAK ADA NOTIFIKASI PENGAJUAN SISWA)
+            // =================================================================
             else if (role === 'alumni') {
-                // Pengalaman PKL yang dikirim alumni
+                // a) Pengalaman PKL berhasil dikirim & tanggapan siswa terhadap pengalaman alumni
                 const pengalamanAlumni = dataPengalaman.filter(exp => isSamePerson(exp.alumni, user.name));
                 pengalamanAlumni.forEach(exp => {
                     hasil.push({
@@ -1114,41 +1122,40 @@
                         role: 'alumni',
                         tipe: 'berhasil',
                         judul: 'Pengalaman PKL Berhasil Dikirim',
-                        deskripsi: `Cerita pengalaman "${exp.judul}" (${exp.tempat}) telah dipublikasikan kepada siswa.`,
+                        deskripsi: `Pengalaman "${exp.judul}" di ${exp.tempat} berhasil dikirim dan dibagikan.`,
                         waktu: '2026-11-12',
                         targetPage: 'form-pengalaman',
                         timestamp: 1700000200000 + exp.id
                     });
 
-                    // Informasi atau tanggapan siswa terhadap pengalaman PKL alumni
                     hasil.push({
                         id: `sys-alumni-resp-${exp.id}`,
                         role: 'alumni',
                         tipe: 'informasi',
-                        judul: 'Tanggapan Siswa pada Pengalaman PKL Anda',
-                        deskripsi: `Siswa jurusan ${user.jurusan || 'SMK'} membaca dan terbantu oleh tips pengalaman "${exp.judul}" Anda.`,
+                        judul: 'Tanggapan Siswa terhadap Pengalaman PKL Anda',
+                        deskripsi: `Siswa aktif membaca dan terbantu oleh pengalaman PKL "${exp.judul}" yang Anda bagikan.`,
                         waktu: '2026-11-13',
                         targetPage: 'dashboard-alumni',
                         timestamp: 1700000250000 + exp.id
                     });
                 });
 
-                // Ulasan dan rating tempat PKL yang disimpan alumni
+                // b) Ulasan dan rating tempat PKL berhasil disimpan
                 const ulasanAlumni = dataUlasan.filter(u => isSamePerson(u.alumni, user.name));
                 ulasanAlumni.forEach(u => {
                     hasil.push({
                         id: `sys-alumni-ulasan-${u.id}`,
                         role: 'alumni',
                         tipe: 'berhasil',
-                        judul: 'Ulasan & Rating Tempat PKL Berhasil Disimpan',
-                        deskripsi: `Ulasan bintang ${u.rating}/5 Anda untuk ${u.tempat} berhasil disimpan.`,
+                        judul: 'Ulasan dan Rating Tempat PKL Berhasil Disimpan',
+                        deskripsi: `Ulasan dan rating ${u.rating} bintang untuk ${u.tempat} berhasil disimpan.`,
                         waktu: u.tanggal,
                         targetPage: 'ulasan-rating',
                         timestamp: new Date(u.tanggal).getTime() || 1700000150000
                     });
                 });
 
-                // Informasi tempat PKL baru yang tersedia di sistem
+                // c) Informasi tempat PKL baru
                 if (dataTempatPKL.length > 0) {
                     const tempatTerbaru = dataTempatPKL[dataTempatPKL.length - 1];
                     hasil.push({
@@ -1156,15 +1163,33 @@
                         role: 'alumni',
                         tipe: 'informasi',
                         judul: 'Informasi Tempat PKL Baru',
-                        deskripsi: `${tempatTerbaru.nama} (${tempatTerbaru.lokasi}) telah terdaftar sebagai mitra PKL. Anda dapat memberikan ulasan jika pernah PKL di sana.`,
-                        waktu: 'Info Mitra PKL',
+                        deskripsi: `Tempat PKL baru ${tempatTerbaru.nama} (${tempatTerbaru.lokasi}) telah tersedia di daftar mitra PKL.`,
+                        waktu: 'Info Tempat PKL',
                         targetPage: 'daftar-tempat',
                         timestamp: 1700000100000
                     });
                 }
             }
 
-            // Gabungkan dengan notifikasi real-time yang dipicu selama sesi berjalan (khusus role & target user terkait)
+            // =================================================================
+            // 4. NOTIFIKASI KHUSUS ROLE: ADMIN (TERPISAH DARI SISWA/GURU/ALUMNI)
+            // =================================================================
+            else if (role === 'admin') {
+                logAktivitas.slice(0, 3).forEach((l, idx) => {
+                    hasil.push({
+                        id: `sys-admin-log-${idx}-${l.user}`,
+                        role: 'admin',
+                        tipe: 'informasi',
+                        judul: 'Aktivitas Sistem Tercatat',
+                        deskripsi: `${l.user}: ${l.aktivitas}`,
+                        waktu: l.waktu,
+                        targetPage: 'log-aktivitas',
+                        timestamp: 1700000100000 - idx
+                    });
+                });
+            }
+
+            // Gabungkan dengan notifikasi real-time yang sesuai role dan target akun login saat ini
             const liveNotifs = dataNotifikasi.filter(n => {
                 if (n.role !== role) return false;
                 if (n.targetUser && !isSamePerson(n.targetUser, user.name)) return false;
@@ -1173,7 +1198,6 @@
             });
 
             const gabungan = [...liveNotifs, ...hasil];
-            // Urutkan dari yang terbaru
             gabungan.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             return gabungan;
         }
@@ -1206,20 +1230,20 @@
             const list = kumpulkanNotifikasiUntukUser(currentUser);
             const unreadCount = list.filter(n => !readNotifIds.has(n.id)).length;
 
-            // Update badge angka pada ikon lonceng
+            // Update badge jumlah belum dibaca pada ikon lonceng
             if (unreadCount > 0) {
                 $('#notif-count').text(unreadCount > 99 ? '99+' : unreadCount).removeClass('d-none');
             } else {
                 $('#notif-count').text('0').addClass('d-none');
             }
 
-            // Render dropdown notifikasi (maksimal 5 terbaru)
+            // Render isi dropdown notifikasi
             if (list.length === 0) {
                 $('#notif-list').html(`
                     <div class="text-center py-4 px-3 text-muted">
                         <i class="bi bi-bell-slash fs-3 d-block mb-1 opacity-50"></i>
                         <div class="small fw-semibold">Belum ada notifikasi</div>
-                        <small style="font-size: 0.72rem;">Aktivitas PKL Anda akan muncul secara otomatis di sini.</small>
+                        <small style="font-size: 0.72rem;">Pemberitahuan aktivitas Anda akan muncul di sini.</small>
                     </div>
                 `);
             } else {
@@ -1234,7 +1258,7 @@
                             </div>
                             <div class="flex-grow-1 min-w-0">
                                 <div class="d-flex justify-content-between align-items-start gap-1 mb-1">
-                                    <span class="fw-semibold small text-dark text-truncate" style="max-width: 195px;" title="${n.judul}">${n.judul}</span>
+                                    <span class="fw-semibold small text-dark text-truncate" style="max-width: 200px;" title="${n.judul}">${n.judul}</span>
                                     <span class="notif-status-pill ${meta.pillClass}">${meta.label}</span>
                                 </div>
                                 <p class="small text-muted mb-1" style="font-size: 0.76rem; line-height: 1.35;">${n.deskripsi}</p>
@@ -1250,7 +1274,6 @@
                 $('#notif-list').html(dropdownHtml);
             }
 
-            // Sinkronkan juga modal 'Lihat Semua Notifikasi' jika sedang terbuka
             renderModalSemuaNotifikasi();
         }
 
@@ -1266,7 +1289,7 @@
                     <div class="text-center py-5 px-3 text-muted">
                         <i class="bi bi-bell-slash fs-1 d-block mb-2 opacity-50"></i>
                         <div class="fw-semibold">Belum ada notifikasi</div>
-                        <small>${currentModalNotifFilter === 'unread' ? 'Semua notifikasi Anda sudah dibaca.' : 'Belum ada riwayat aktivitas yang tercatat untuk akun Anda.'}</small>
+                        <small>${currentModalNotifFilter === 'unread' ? 'Semua notifikasi Anda sudah dibaca.' : 'Belum ada riwayat notifikasi untuk akun Anda.'}</small>
                     </div>
                 `);
                 return;
@@ -1305,7 +1328,6 @@
             $('#modal-notif-list').html(modalHtml);
         }
 
-        // Event klik pada item notifikasi (menandai sudah dibaca + navigasi ke halaman terkait jika ada)
         $(document).on('click', '.notif-item', function(e) {
             if ($(e.target).closest('.mark-single-read').length) return;
             const notifId = $(this).data('notif-id');
@@ -1331,7 +1353,6 @@
             }
         });
 
-        // Tandai 1 notifikasi sudah dibaca di dalam modal
         $(document).on('click', '.mark-single-read', function(e) {
             e.stopPropagation();
             const notifId = $(this).data('notif-id');
@@ -1341,7 +1362,6 @@
             }
         });
 
-        // Tandai semua notifikasi milik user saat ini sebagai sudah dibaca
         $(document).on('click', '#btn-mark-all-read, #btn-modal-mark-all-read', function(e) {
             e.stopPropagation();
             if (!currentUser) return;
@@ -1350,7 +1370,6 @@
             renderNotifikasi();
         });
 
-        // Buka Modal 'Lihat Semua Notifikasi'
         $(document).on('click', '#btn-lihat-semua-notif', function() {
             const ddToggle = document.getElementById('btn-notif-bell');
             const ddInst = bootstrap.Dropdown.getInstance(ddToggle);
@@ -1364,7 +1383,6 @@
             new bootstrap.Modal('#modalSemuaNotifikasi').show();
         });
 
-        // Filter Semua / Belum Dibaca di Modal Notifikasi
         $(document).on('click', '.filter-modal-notif', function() {
             currentModalNotifFilter = $(this).data('filter');
             $('.filter-modal-notif').removeClass('btn-navy active').addClass('btn-outline-secondary');
@@ -1431,7 +1449,6 @@
 
             $('#login-alert, #login-success').addClass('d-none');
 
-            // Cocokkan Username, Email, atau NISN/NIP dengan password atau NISN/NIP
             const akun = daftarAkun.find(a =>
                 a.username.toLowerCase() === identity ||
                 a.email.toLowerCase() === identity ||
@@ -1453,14 +1470,13 @@
                 return;
             }
 
-            // Login berhasil -> Role dibaca langsung dari akun, bukan dari form
             currentUser = akun;
             logAktivitas.unshift({ waktu: 'Baru saja', user: akun.username, aktivitas: `Login ke sistem sebagai ${akun.role.toUpperCase()}` });
 
             $('#badge-role').text(akun.role.toUpperCase());
             $('#nav-username').text(akun.name);
 
-            // Render notifikasi dinamis sesuai role akun yang sedang login
+            // Muat notifikasi dinamis sesuai role pengguna yang sedang login
             renderNotifikasi();
 
             const activePage = menusByRole[akun.role][0].id;
@@ -2235,4 +2251,490 @@
                                 <label class="form-label small fw-semibold">Komentar Ulasan</label>
                                 <textarea id="ulasan-komentar" class="form-control" rows="3" placeholder="Ceritakan suasana kerja, bimbingan mentor, dan fasilitas..." required></textarea>
                             </div>
-                            <button type="submit" class="btn btn-navy"><i class="bi bi-star me
+                            <button type="submit" class="btn btn-navy"><i class="bi bi-star me-1"></i>Kirim Ulasan</button>
+                        </form>
+                    </div>
+                    <div class="card table-card p-4">
+                        <h6 class="fw-bold mb-3">Daftar Ulasan Alumni</h6>
+                        ${dataUlasan.map(u => `
+                            <div class="border-bottom pb-2 mb-2">
+                                <div class="d-flex justify-content-between">
+                                    <strong>${u.tempat}</strong>
+                                    <span class="text-warning">${'★'.repeat(u.rating)}</span>
+                                </div>
+                                <small class="text-muted">${u.alumni} • ${u.tanggal}</small>
+                                <p class="small mb-0 mt-1">${u.komentar}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // 16. PROFIL PENGGUNA
+            else if (page === 'profil') {
+                $('#page-title').text('Profil Pengguna');
+                html = `
+                    <div class="card table-card p-4" style="max-width: 550px;">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="icon-box fs-2" style="width: 64px; height: 64px;"><i class="bi bi-person-fill"></i></div>
+                            <div>
+                                <h5 class="fw-bold mb-0">${currentUser.name}</h5>
+                                <span class="badge bg-primary text-uppercase">${currentUser.role}</span>
+                            </div>
+                        </div>
+                        <form id="form-profil">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Nama Lengkap</label>
+                                <input type="text" class="form-control" value="${currentUser.name}" readonly>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">NISN / NIP</label>
+                                    <input type="text" class="form-control" value="${currentUser.nis_nip}" readonly>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label small fw-semibold">Username</label>
+                                    <input type="text" class="form-control" value="${currentUser.username}" readonly>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Ganti Password Baru (Opsional)</label>
+                                <input type="password" id="profil-new-pass" class="form-control" placeholder="Isi jika ingin mengganti password">
+                            </div>
+                            <button type="submit" class="btn btn-navy">Simpan Perubahan Password</button>
+                        </form>
+                    </div>
+                `;
+            }
+
+            $('#content-area').hide().html(html).fadeIn(150);
+        }
+
+        // =====================================================================
+        // INTERAKSI & EVENT HANDLER JQUERY
+        // =====================================================================
+        function renderKartuTempat() {
+            const keyword = ($('#cari-tempat').val() || '').toLowerCase();
+            const jurusan = $('#filter-jurusan').val() || '';
+
+            const filtered = dataTempatPKL.filter(t => {
+                const matchKey = t.nama.toLowerCase().includes(keyword) || t.lokasi.toLowerCase().includes(keyword);
+                const matchJur = !jurusan || t.jurusan === jurusan;
+                return matchKey && matchJur;
+            });
+
+            let cards = '';
+            filtered.forEach(t => {
+                cards += `
+                    <div class="col-md-4">
+                        <div class="card h-100 border shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary-subtle text-primary">${t.jurusan}</span>
+                                    <span class="text-warning fw-bold small"><i class="bi bi-star-fill"></i> ${t.rating}</span>
+                                </div>
+                                <h6 class="fw-bold">${t.nama}</h6>
+                                <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>${t.lokasi}</p>
+                                <p class="small mb-3">${t.bidang}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="small fw-semibold text-success">Kuota: ${t.kuota}</span>
+                                    <button class="btn btn-sm btn-navy lihat-detail" data-id="${t.id}">Detail Tempat</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            $('#list-tempat-container').html(cards || '<div class="col-12 text-center text-muted py-4">Data tempat PKL tidak ditemukan.</div>');
+        }
+
+        function isiModalDetail(id) {
+            const t = dataTempatPKL.find(x => x.id === id) || dataTempatPKL[0];
+            const ulasanTempat = dataUlasan.filter(u => u.id_tempat === t.id);
+
+            $('#detail-nama').text(t.nama);
+            $('#detail-body').html(`
+                <p class="mb-1"><b>Lokasi:</b> ${t.alamat}</p>
+                <p class="mb-1"><b>Bidang Kegiatan:</b> ${t.bidang}</p>
+                <p class="mb-1"><b>Jurusan Relevan:</b> ${t.jurusan}</p>
+                <p class="mb-1"><b>Kuota Tersedia:</b> ${t.kuota} Siswa</p>
+                <p class="mb-3"><b>Persyaratan:</b> ${t.persyaratan}</p>
+                <hr>
+                <h6 class="fw-bold">Ulasan & Rating Alumni</h6>
+                ${ulasanTempat.length ? ulasanTempat.map(u => `
+                    <div class="bg-light p-2 rounded mb-2">
+                        <div class="d-flex justify-content-between small fw-bold">
+                            <span>${u.alumni}</span>
+                            <span class="text-warning">${'★'.repeat(u.rating)}</span>
+                        </div>
+                        <p class="small mb-0">${u.komentar}</p>
+                    </div>
+                `).join('') : '<p class="small text-muted">Belum ada ulasan untuk tempat ini.</p>'}
+            `);
+        }
+
+        $(document).on('keyup', '#cari-tempat', renderKartuTempat);
+        $(document).on('change', '#filter-jurusan', renderKartuTempat);
+        $(document).on('click', '#btn-reset-filter', function() {
+            $('#cari-tempat').val('');
+            $('#filter-jurusan').val('');
+            renderKartuTempat();
+        });
+
+        $(document).on('click', '.lihat-detail', function() {
+            isiModalDetail($(this).data('id'));
+            new bootstrap.Modal('#modalDetailTempat').show();
+        });
+
+        // Admin Tambah NISN Master
+        $(document).on('submit', '#form-tambah-nisn', function(e) {
+            e.preventDefault();
+            const nisn = $('#new-nisn').val().trim();
+            if (masterDataSekolah.some(s => s.nisn === nisn)) {
+                showNotifToast('NISN sudah terdaftar di database sekolah!', 'danger');
+                return;
+            }
+            masterDataSekolah.push({
+                nisn: nisn,
+                nama: $('#new-nama-siswa').val().trim(),
+                kelas: $('#new-kelas-siswa').val().trim(),
+                jurusan: $('#new-jurusan-siswa').val(),
+                status_lulus: false,
+                terdaftar: false
+            });
+            logAktivitas.unshift({ waktu: 'Baru saja', user: currentUser.username, aktivitas: `Menambahkan master NISN ${nisn}` });
+            $('#form-tambah-nisn')[0].reset();
+            renderNotifikasi();
+            showNotifToast(`Data NISN ${nisn} berhasil ditambahkan ke database sekolah.`);
+        });
+
+        // Admin Aktif/Nonaktif Akun
+        $(document).on('click', '.toggle-status-akun', function() {
+            const id = $(this).data('id');
+            const idx = daftarAkun.findIndex(a => a.id === id);
+            daftarAkun[idx].status = daftarAkun[idx].status === 'aktif' ? 'nonaktif' : 'aktif';
+            loadPage('kelola-akun');
+            showNotifToast('Status akun pengguna berhasil diperbarui.');
+        });
+
+        // Submit Pengajuan Siswa -> Memicu Notifikasi Siswa & Guru Pembimbing (Tidak muncul di Alumni)
+        $(document).on('submit', '#submit-pengajuan', function(e) {
+            e.preventDefault();
+            const tempatDipilih = $('#pilih-tempat-ajukan').val();
+            dataPengajuan.push({
+                id: Date.now(),
+                siswa: currentUser.name,
+                tempat: tempatDipilih,
+                tanggal: '2026-11-13',
+                status: 'Menunggu'
+            });
+
+            tambahNotifikasiSistem({
+                role: 'siswa',
+                targetUser: currentUser.name,
+                tipe: 'berhasil',
+                judul: 'Pengajuan Tempat PKL Berhasil Dikirim',
+                deskripsi: `Pengajuan PKL Anda di ${tempatDipilih} berhasil dikirim dan menunggu verifikasi.`,
+                targetPage: 'status-pengajuan'
+            });
+
+            tambahNotifikasiSistem({
+                role: 'guru',
+                siswaTerkait: currentUser.name,
+                tipe: 'menunggu',
+                judul: 'Pengajuan PKL Baru dari Siswa Bimbingan',
+                deskripsi: `${currentUser.name} mengajukan tempat PKL baru di ${tempatDipilih}.`,
+                targetPage: 'kelola-pengajuan'
+            });
+
+            renderNotifikasi();
+            loadPage('status-pengajuan');
+            showNotifToast('Pengajuan tempat PKL berhasil dikirim dan menunggu verifikasi.');
+        });
+
+        // CRUD Monitoring Siswa -> Memicu Notifikasi Guru Pembimbing
+        $(document).on('submit', '#form-tambah-monitoring', function(e) {
+            e.preventDefault();
+            const tglMon = $('#mon-tgl').val();
+            const kegMon = $('#mon-kegiatan').val();
+            dataMonitoring.push({
+                id: Date.now(),
+                siswa: currentUser.name,
+                tanggal: tglMon,
+                kegiatan: kegMon,
+                perkembangan: $('#mon-perkembangan').val(),
+                status: 'Menunggu Verifikasi',
+                catatan: 'Menunggu tinjauan guru'
+            });
+
+            tambahNotifikasiSistem({
+                role: 'guru',
+                siswaTerkait: currentUser.name,
+                tipe: 'menunggu',
+                judul: 'Terdapat Laporan Monitoring Siswa Menunggu Verifikasi',
+                deskripsi: `${currentUser.name} mengirim laporan monitoring "${kegMon}" (${tglMon}).`,
+                targetPage: 'monitoring-admin'
+            });
+
+            renderNotifikasi();
+            loadPage('monitoring-siswa');
+            showNotifToast('Laporan monitoring kegiatan PKL berhasil ditambahkan.');
+        });
+
+        $(document).on('click', '.hapus-monitoring', function() {
+            if (confirm('Yakin ingin menghapus catatan monitoring ini?')) {
+                const id = $(this).data('id');
+                dataMonitoring = dataMonitoring.filter(m => m.id !== id);
+                renderNotifikasi();
+                loadPage('monitoring-siswa');
+                showNotifToast('Data monitoring dihapus.', 'warning');
+            }
+        });
+
+        // Persetujuan Monitoring oleh Guru -> Memicu Notifikasi Siswa terkait & Guru
+        $(document).on('click', '.setujui-monitoring', function() {
+            const id = $(this).data('id');
+            const idx = dataMonitoring.findIndex(m => m.id === id);
+            const itemMon = dataMonitoring[idx];
+            dataMonitoring[idx].status = 'Disetujui';
+            dataMonitoring[idx].catatan = 'Laporan kegiatan sesuai dan disetujui pembimbing.';
+
+            tambahNotifikasiSistem({
+                role: 'siswa',
+                targetUser: itemMon.siswa,
+                tipe: 'berhasil',
+                judul: 'Laporan Monitoring Disetujui Guru',
+                deskripsi: `Laporan monitoring "${itemMon.kegiatan}" (${itemMon.tanggal}) telah disetujui guru pembimbing.`,
+                targetPage: 'monitoring-siswa'
+            });
+
+            tambahNotifikasiSistem({
+                role: 'guru',
+                targetUser: currentUser.name,
+                siswaTerkait: itemMon.siswa,
+                tipe: 'berhasil',
+                judul: 'Laporan Monitoring Berhasil Disetujui',
+                deskripsi: `Laporan monitoring ${itemMon.siswa} untuk "${itemMon.kegiatan}" telah berhasil disetujui.`,
+                targetPage: 'monitoring-admin'
+            });
+
+            renderNotifikasi();
+            loadPage('monitoring-admin');
+            showNotifToast('Laporan monitoring berhasil disetujui.');
+        });
+
+        // CRUD Tempat PKL (Admin) -> Memicu Notifikasi Informasi Tempat PKL Baru bagi Alumni
+        $(document).on('click', '#btn-tambah-tempat', function() {
+            $('#modalTempatTitle').text('Tambah Data Tempat PKL');
+            $('#edit-tempat-id').val('');
+            $('#form-tempat-pkl')[0].reset();
+            new bootstrap.Modal('#modalFormTempat').show();
+        });
+
+        $(document).on('click', '.edit-tempat', function() {
+            const t = dataTempatPKL.find(x => x.id === $(this).data('id'));
+            $('#modalTempatTitle').text('Edit Data Tempat PKL');
+            $('#edit-tempat-id').val(t.id);
+            $('#input-nama-perusahaan').val(t.nama);
+            $('#input-lokasi').val(t.lokasi);
+            $('#input-kuota').val(t.kuota);
+            $('#input-jurusan').val(t.jurusan);
+            $('#input-bidang').val(t.bidang);
+            $('#input-syarat').val(t.persyaratan);
+            new bootstrap.Modal('#modalFormTempat').show();
+        });
+
+        $('#form-tempat-pkl').on('submit', function(e) {
+            e.preventDefault();
+            const editId = $('#edit-tempat-id').val();
+            const obj = {
+                id: editId ? parseInt(editId) : Date.now(),
+                nama: $('#input-nama-perusahaan').val(),
+                lokasi: $('#input-lokasi').val(),
+                alamat: $('#input-lokasi').val(),
+                kuota: parseInt($('#input-kuota').val()),
+                jurusan: $('#input-jurusan').val(),
+                bidang: $('#input-bidang').val(),
+                persyaratan: $('#input-syarat').val(),
+                rating: 5.0
+            };
+
+            if (editId) {
+                const idx = dataTempatPKL.findIndex(x => x.id === parseInt(editId));
+                dataTempatPKL[idx] = obj;
+            } else {
+                dataTempatPKL.push(obj);
+                tambahNotifikasiSistem({
+                    role: 'alumni',
+                    tipe: 'informasi',
+                    judul: 'Informasi Tempat PKL Baru',
+                    deskripsi: `Mitra tempat PKL baru ${obj.nama} (${obj.lokasi}) telah ditambahkan ke sistem.`,
+                    targetPage: 'daftar-tempat'
+                });
+            }
+            bootstrap.Modal.getInstance(document.getElementById('modalFormTempat')).hide();
+            renderNotifikasi();
+            loadPage('kelola-tempat');
+            showNotifToast('Data tempat PKL berhasil disimpan.');
+        });
+
+        $(document).on('click', '.hapus-tempat', function() {
+            if (confirm('Apakah Anda yakin ingin menghapus tempat PKL ini?')) {
+                const id = $(this).data('id');
+                dataTempatPKL = dataTempatPKL.filter(t => t.id !== id);
+                renderNotifikasi();
+                loadPage('kelola-tempat');
+                showNotifToast('Data tempat PKL berhasil dihapus.', 'danger');
+            }
+        });
+
+        // Tombol Terima / Tolak Pengajuan -> Hanya memicu notifikasi pada akun Siswa yang bersangkutan
+        $(document).on('click', '.ubah-status', function() {
+            const id = $(this).data('id');
+            const status = $(this).data('status');
+            const idx = dataPengajuan.findIndex(p => p.id === id);
+            const itemPengajuan = dataPengajuan[idx];
+            dataPengajuan[idx].status = status;
+
+            if (status === 'Diterima') {
+                tambahNotifikasiSistem({
+                    role: 'siswa',
+                    targetUser: itemPengajuan.siswa,
+                    tipe: 'berhasil',
+                    judul: 'Pengajuan PKL Diterima',
+                    deskripsi: `Pengajuan PKL Anda di ${itemPengajuan.tempat} telah diterima.`,
+                    targetPage: 'status-pengajuan'
+                });
+            } else if (status === 'Ditolak') {
+                tambahNotifikasiSistem({
+                    role: 'siswa',
+                    targetUser: itemPengajuan.siswa,
+                    tipe: 'ditolak',
+                    judul: 'Pengajuan PKL Ditolak',
+                    deskripsi: `Pengajuan PKL Anda di ${itemPengajuan.tempat} ditolak. Silakan ajukan tempat PKL lain.`,
+                    targetPage: 'status-pengajuan'
+                });
+            }
+
+            renderNotifikasi();
+            loadPage('kelola-pengajuan');
+            showNotifToast(`Status pengajuan diperbarui menjadi ${status}.`);
+        });
+
+        // Simpan Nilai Terbobot (20%, 20%, 30%, 15%, 15%) -> Memicu Notifikasi Siswa terkait
+        $(document).on('submit', '#form-input-nilai', function(e) {
+            e.preventDefault();
+            const d = parseFloat($('#n-disiplin').val());
+            const tj = parseFloat($('#n-tanggung').val());
+            const k = parseFloat($('#n-keterampilan').val());
+            const ks = parseFloat($('#n-kerjasama').val());
+            const s = parseFloat($('#n-sikap').val());
+            const nilaiAkhir = ((d * 0.20) + (tj * 0.20) + (k * 0.30) + (ks * 0.15) + (s * 0.15)).toFixed(2);
+
+            dataPenilaian[0] = {
+                id: 1,
+                siswa: 'Andi Pratama',
+                disiplin: d,
+                tanggung_jawab: tj,
+                keterampilan: k,
+                kerja_sama: ks,
+                sikap: s,
+                akhir: nilaiAkhir,
+                catatan: $('#n-catatan').val()
+            };
+            logAktivitas.unshift({ waktu: 'Baru saja', user: currentUser.username, aktivitas: `Memperbarui nilai akhir Andi Pratama menjadi ${nilaiAkhir}` });
+
+            tambahNotifikasiSistem({
+                role: 'siswa',
+                targetUser: 'Andi Pratama',
+                tipe: 'informasi',
+                judul: 'Hasil Penilaian PKL Telah Tersedia',
+                deskripsi: `Hasil penilaian PKL Anda telah diperbarui dengan nilai akhir ${nilaiAkhir}.`,
+                targetPage: 'hasil-penilaian'
+            });
+
+            renderNotifikasi();
+            showNotifToast(`Nilai PKL siswa berhasil disimpan (Nilai Akhir Terbobot: ${nilaiAkhir}).`);
+        });
+
+        // Pengalaman & Ulasan Alumni -> Hanya memicu notifikasi pada role Alumni
+        $(document).on('submit', '#submit-pengalaman', function(e) {
+            e.preventDefault();
+            const tempatExp = $('#exp-tempat').val();
+            const judulExp = $('#exp-judul').val();
+            dataPengalaman.unshift({
+                id: Date.now(),
+                alumni: currentUser.name,
+                tempat: tempatExp,
+                judul: judulExp,
+                kegiatan: $('#exp-kegiatan').val(),
+                kendala: $('#exp-kendala').val(),
+                solusi: $('#exp-solusi').val(),
+                tips: $('#exp-tips').val()
+            });
+
+            tambahNotifikasiSistem({
+                role: 'alumni',
+                targetUser: currentUser.name,
+                tipe: 'berhasil',
+                judul: 'Pengalaman PKL Berhasil Dikirim',
+                deskripsi: `Pengalaman "${judulExp}" di ${tempatExp} berhasil dikirim kepada siswa.`,
+                targetPage: 'dashboard-alumni'
+            });
+
+            renderNotifikasi();
+            loadPage('dashboard-alumni');
+            showNotifToast('Pengalaman PKL berhasil dibagikan kepada siswa.');
+        });
+
+        $(document).on('click', '#star-input i', function() {
+            const val = $(this).data('val');
+            $('#ulasan-rating-val').val(val);
+            $('#star-input i').each(function() {
+                $(this).toggleClass('active', $(this).data('val') <= val);
+            });
+        });
+
+        $(document).on('submit', '#submit-ulasan', function(e) {
+            e.preventDefault();
+            const idTempat = parseInt($('#ulasan-tempat').val());
+            const tempatObj = dataTempatPKL.find(t => t.id === idTempat);
+            const ratingVal = parseInt($('#ulasan-rating-val').val());
+            dataUlasan.unshift({
+                id: Date.now(),
+                alumni: currentUser.name,
+                id_tempat: idTempat,
+                tempat: tempatObj.nama,
+                rating: ratingVal,
+                komentar: $('#ulasan-komentar').val(),
+                tanggal: '2026-11-13'
+            });
+
+            tambahNotifikasiSistem({
+                role: 'alumni',
+                targetUser: currentUser.name,
+                tipe: 'berhasil',
+                judul: 'Ulasan dan Rating Tempat PKL Berhasil Disimpan',
+                deskripsi: `Ulasan dan rating ${ratingVal} bintang untuk ${tempatObj.nama} berhasil disimpan.`,
+                targetPage: 'ulasan-rating'
+            });
+
+            renderNotifikasi();
+            loadPage('ulasan-rating');
+            showNotifToast('Ulasan dan rating berhasil dikirim.');
+        });
+
+        $(document).on('submit', '#form-profil', function(e) {
+            e.preventDefault();
+            const newPass = $('#profil-new-pass').val().trim();
+            if (newPass) {
+                currentUser.password = newPass;
+                $('#profil-new-pass').val('');
+                showNotifToast('Password akun berhasil diperbarui.');
+            } else {
+                showNotifToast('Tidak ada perubahan password yang dimasukkan.', 'info');
+            }
+        });
+    </script>
+</body>
+</html>
