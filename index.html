@@ -1003,7 +1003,8 @@
 
             $('#login-page').fadeOut(150, function() {
                 $('#app-wrapper').fadeIn(200);
-                loadPage(activePage);
+                history.replaceState(null, '', '#' + activePage);
+                openPage(activePage);
             });
         });
 
@@ -1109,6 +1110,7 @@
         $('#btn-logout').on('click', function(e) {
             e.preventDefault();
             currentUser = null;
+            history.replaceState(null, '', window.location.pathname + window.location.search);
             $('#form-login')[0].reset();
             $('#app-wrapper').fadeOut(150, function() {
                 $('#login-page').css('display', 'flex').hide().fadeIn(200);
@@ -1132,10 +1134,28 @@
         $(document).on('click', '.menu-item', function(e) {
             e.preventDefault();
             const target = $(this).data('page');
+            $('#sidebar').removeClass('mobile-open');
+            if (window.location.hash === '#' + target) {
+                openPage(target);
+            } else {
+                window.location.hash = target; // URL berubah -> memicu hashchange
+            }
+        });
+
+        // Buka halaman + tandai menu aktif
+        function openPage(target) {
             $('.menu-item').removeClass('active');
             $(`.menu-item[data-page="${target}"]`).addClass('active');
-            $('#sidebar').removeClass('mobile-open');
             loadPage(target);
+        }
+
+        // Tombol back/forward browser & perubahan link
+        $(window).on('hashchange', function() {
+            if (!currentUser) return;
+            const target = window.location.hash.replace('#', '');
+            if (menusByRole[currentUser.role].some(m => m.id === target)) {
+                openPage(target);
+            }
         });
 
         // =====================================================================
